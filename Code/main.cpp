@@ -21,15 +21,15 @@ private:
 
 	// Called by the miniaudio each time new frames are needed
 	static void dataCallback(
-		ma_device* pDevice, 
-		void* pOutput, const void* pInput, 
+		ma_device* pDevice,
+		void* pOutput, const void* pInput,
 		uint32_t frameCount
 	) {
 		// pDevice saves instance of this class
 		AudioPlayer* self = reinterpret_cast<AudioPlayer*>(pDevice->pUserData);
-		
+
 		// Display and Play the samples
-		self->onCallback(pOutput, frameCount);	
+		self->onCallback(pOutput, frameCount);
 	}
 
 	void onCallback(void* pOutput, uint32_t frameCount)
@@ -53,7 +53,7 @@ private:
 
         	ma_device_stop(&device);
 		}
-		
+
 
 		// Update the subscribers
 		// for (auto &sub : subscribers)
@@ -62,7 +62,7 @@ private:
 		// Advance cursor
 		cursor += bytesToCopy;
 	}
-	
+
 public:
 	AudioPlayer(
 		AudioData &audioData
@@ -124,47 +124,46 @@ private:
 	AudioData &m_audioData;
 	bool m_playing;
 
-	int m_minimum_audio;
+	// int m_minimum_audio;
 	size_t m_cursor;
 public:
 	SDL_AudioPlayer(AudioData &ad)
-	: m_audioData(ad), m_playing(false), m_cursor(0)
-	{
+	: m_audioData(ad), m_playing(false), m_cursor(0) {
 		SDL_AudioSpec spec;
 		spec.channels = m_audioData.nChannels;
 		spec.freq = static_cast<int>(m_audioData.sampleRate);
 		switch (m_audioData.bitsPerSample)
 		{
-		case 8:
-			spec.format = SDL_AUDIO_U8;
-			std::cout << "Selected U8 PCM\n";
-			break;
-		case 16:
-			spec.format = SDL_AUDIO_S16;
-			std::cout << "Selected S16 PCM\n";
-			break;
-		case 24:
-			throw std::runtime_error("24 Bit PCM Format not supported.\n");
-		case 32:
-			spec.format = SDL_AUDIO_S32;
-			std::cout << "Selected S32 PCM\n";
-			break;
-		default:
-			throw std::runtime_error("Playback for this format is not supported.\n");
+			case 8:
+				spec.format = SDL_AUDIO_U8;
+				std::cout << "Selected U8 PCM\n";
+				break;
+			case 16:
+				spec.format = SDL_AUDIO_S16;
+				std::cout << "Selected S16 PCM\n";
+				break;
+			case 24:
+				throw std::runtime_error("24 Bit PCM Format not supported.\n");
+			case 32:
+				spec.format = SDL_AUDIO_S32;
+				std::cout << "Selected S32 PCM\n";
+				break;
+			default:
+				throw std::runtime_error("Playback for this format is not supported.\n");
 		}
 
 		m_stream = SDL_OpenAudioDeviceStream(
-			SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, 
-			&spec, 
+			SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+			&spec,
 			nullptr, nullptr
 		);
 
-		if (!m_stream) 
-			throw std::runtime_error("Could not open audio device.\n");
+		if (!m_stream)
+			throw std::runtime_error(std::string("Failed to open audio device.\n[SDL]: ") + SDL_GetError());
 
 		// Minimum is one second of audio
-		m_minimum_audio = static_cast<int>
-			(m_audioData.sampleRate * m_audioData.bitsPerSample * m_audioData.nChannels);
+		// m_minimum_audio = static_cast<int>
+		// 	(m_audioData.sampleRate * m_audioData.bitsPerSample * m_audioData.nChannels);
 	};
 
 	void togglePlayback() {
@@ -180,25 +179,12 @@ public:
 	}
 
 	void feedSamples() {
-		if (SDL_GetAudioStreamQueued(m_stream) < m_minimum_audio) {
-
-			// how much is left?
-			const size_t available = m_audioData.samples.size() - m_cursor;
-			const uint8_t *current = m_audioData.samples.data() + m_cursor;
-			// Put that
-			const size_t frame_size = 512 * m_audioData.bitsPerSample * m_audioData.nChannels;
-			if (available > frame_size) {
-				SDL_PutAudioStreamData(m_stream, current, static_cast<int>(frame_size));
-				std::cout << "Put " << frame_size << " Bytes" << std::endl;
-				current += frame_size;
+		if (SDL_GetAudioStreamQueued(m_stream) < m_audioData.samples.size()) {
+			if (!SDL_PutAudioStreamData(
+				m_stream, m_audioData.samples.data(), static_cast<int>(m_audioData.samples.size())
+			)) {
+				throw std::runtime_error(std::string("Failed to put audio stream data.\n[SDL]:") + SDL_GetError());
 			}
-			else {
-				SDL_PutAudioStreamData(m_stream, current, static_cast<int>(available));
-				std::cout << "Put " + available << " Bytes" << std::endl;
-				current += static_cast<int>(available);
-			}
-
-
 		}
 	}
 
@@ -224,14 +210,14 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-	try {
-		WavFile w("../Musik/test.wav");
-		g_audioData = std::make_shared<AudioData>(w.getAudioData());
-		g_audioPlayer = std::make_shared<SDL_AudioPlayer>(*g_audioData);
-		g_audioData->print();
-	} catch (std::exception& e) {
-		std::cerr << e.what() << std::endl;
-	}
+	// try {
+	// 	WavFile w("../Musik/test.wav");
+	// 	g_audioData = std::make_shared<AudioData>(w.getAudioData());
+	// 	g_audioPlayer = std::make_shared<SDL_AudioPlayer>(*g_audioData);
+	// 	g_audioData->print();
+	// } catch (std::exception& e) {
+	// 	std::cerr << e.what() << std::endl;
+	// }
 
     return SDL_APP_CONTINUE;
 }
@@ -246,6 +232,15 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 	// File drop event
 	if (event->type == SDL_EVENT_DROP_FILE) {
 		std::cout << event->drop.data << std::endl;
+		try {
+			WavFile w(event->drop.data);
+			g_audioData = std::make_shared<AudioData>(w.getAudioData());
+			g_audioPlayer = std::make_shared<SDL_AudioPlayer>(*g_audioData);
+		} catch (const std::exception &e) {
+			std::cout << e.what() << std::endl;
+		}
+
+
 		// SDL_free((void*)event->drop.data); // Causes corruption fsr
 	}
 	// Play and Pause
@@ -255,7 +250,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 			g_audioPlayer->togglePlayback();
 		}
 	}
-	
+
     return SDL_APP_CONTINUE;
 }
 
@@ -263,10 +258,6 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
 	if (g_audioPlayer)
 		g_audioPlayer->feedSamples();
-
-	if (SDL_GetError()) {
-		std::cerr << SDL_GetError() << std::endl;
-	}
 
 	return SDL_APP_CONTINUE;  /* carry on with the program! */
 }
