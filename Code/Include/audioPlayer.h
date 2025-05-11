@@ -1,6 +1,10 @@
-#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_main.h>
+#pragma once
+
+#include "internal.h"
+#include "SDL3/SDL_audio.h"
+#include "SDL3/SDL_error.h"
+#include "SDL3/SDL_render.h"
+#include "SDL3/SDL_video.h"
 
 static SDL_Window *window = nullptr;
 static SDL_Renderer *renderer = nullptr;

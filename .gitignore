@@ -2,3 +2,7 @@
 
 Musik
 SDL
+Tests
+
+build
+cmake-build-debug
