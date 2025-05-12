@@ -1,7 +1,18 @@
-#include "internal.h"
+#include "audioData.h"
+#include "audioPlayer.h"
+
+#include <memory>
+#include <iostream>
+
+#define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
 std::shared_ptr<AudioData> g_audioData;
-std::shared_ptr<SDL_AudioPlayer> g_audioPlayer;
+std::shared_ptr<AudioPlayer> g_audioPlayer;
+
+SDL_Window* window;
+SDL_Renderer* renderer;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -31,9 +42,10 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 	if (event->type == SDL_EVENT_DROP_FILE) {
 		std::cout << event->drop.data << std::endl;
 		try {
-			WavFile w(event->drop.data);
-			g_audioData = std::make_shared<AudioData>(w.getAudioData());
-			g_audioPlayer = std::make_shared<SDL_AudioPlayer>(*g_audioData);
+			g_audioData = std::make_shared<AudioData>(
+				AudioData::loadFromWavFile(event->drop.data)
+			);
+			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
 		} catch (const std::exception &e) {
 			g_audioData = nullptr;
 			g_audioPlayer = nullptr;

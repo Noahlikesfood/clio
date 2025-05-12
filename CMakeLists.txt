@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(MyProject LANGUAGES CXX)
+project(MusikVisualizer LANGUAGES CXX)
 
 # Set C++ standard and compile options
 set(CMAKE_CXX_STANDARD 20)
@@ -16,7 +16,11 @@ link_directories(${CMAKE_SOURCE_DIR}/SDL/cmake-build-debug/Debug)
 set(LIBS SDL3.lib)
 
 # Main executable
-add_executable(main Code/main.cpp)
+add_executable(main
+        Code/main.cpp
+        Code/audioData.cpp
+        Code/audioPlayer.cpp
+)
 target_link_libraries(main PRIVATE ${LIBS})
 
 # Automatically add all test files from Tests/
