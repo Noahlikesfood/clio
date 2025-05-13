@@ -39,6 +39,7 @@ void AudioPlayer::togglePlayback() {
 
 void AudioPlayer::feedSamples() {
     if (SDL_GetAudioStreamQueued(m_audio_stream) < m_audio_data.data_len) {
+        m_audio_data.print();
         if (!SDL_PutAudioStreamData(
             m_audio_stream, m_audio_data.data, static_cast<int>(m_audio_data.data_len)
         )) {
