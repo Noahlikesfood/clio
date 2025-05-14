@@ -15,7 +15,7 @@ private:
 	SDL_AudioDeviceID m_device_id;
 	SDL_AudioStream *m_audio_stream;
 
-	AudioData m_audio_data;
+	const AudioData &m_audio_data;
 	bool m_playing;
 	size_t m_cursor = 0;
 	// int m_minimum_audio;
@@ -24,7 +24,9 @@ public:
 	AudioPlayer(const AudioData &audioData);
 
 	void togglePlayback();
-
 	void feedSamples();
+	void print() {
+		std::cout << std::format("Device Name:\t{}\n", SDL_GetAudioDeviceName(m_device_id));
+	}
 	~AudioPlayer();
 };

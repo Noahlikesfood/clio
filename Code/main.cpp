@@ -40,21 +40,20 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
     }
 	// File drop event
 	if (event->type == SDL_EVENT_DROP_FILE) {
-		std::cout << event->drop.data << std::endl;
+		std::filesystem::path dropped_file_path(event->drop.data);
+		std::cout << "path: " << dropped_file_path << std::endl;
+
 		try {
 			g_audioData = std::make_shared<AudioData>(
-				AudioData::loadFromWavFile(event->drop.data)
+				AudioData::loadFromWavFile(dropped_file_path)
 			);
-			g_audioData->print();
+			// g_audioData->print();
 			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
 		} catch (const std::exception &e) {
 			g_audioData = nullptr;
 			g_audioPlayer = nullptr;
 			std::cout << e.what() << std::endl;
 		}
-
-
-		// SDL_free((void*)event->drop.data); // Causes corruption fsr
 	}
 	// Play and Pause
 	else if (event->type == SDL_EVENT_KEY_DOWN) {

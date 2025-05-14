@@ -8,29 +8,38 @@
 
 struct AudioData 
 {
-	const SDL_AudioSpec spec;
+    std::filesystem::path path;
+	SDL_AudioSpec spec;
 
+    // Used as a container for samples of any type
     std::vector<uint8_t> data;
 
-	void *data;
-	const uint32_t data_len;
+    // rValue constructor (used in loadFromWavFile)
+    AudioData(std::filesystem::path &&path, SDL_AudioSpec spec, std::vector<uint8_t> &&data)
+        : path(std::move(path)), spec(spec), data(std::move(data)) {};
+    // Move constructor
+    AudioData(AudioData &&other) noexcept
+    : path(std::move(other.path)), spec(other.spec), data(std::move(other.data)) {}
+    // Move assignment operator
+    AudioData &operator=(AudioData &&other) noexcept {
+        AudioData temp(std::move(other));
+        std::swap(*this, temp);
+        return *this;
+    }
 
-	AudioData(const SDL_AudioSpec &spec, void *data, const uint32_t data_len)
-		: spec(spec), data(data), data_len(data_len) {}
+    // Delete the copy constructors
+	AudioData(const AudioData &) = delete;
+    AudioData& operator=(const AudioData &) = delete;
 
-	~AudioData() {
-		SDL_free(data);
-	}
+	~AudioData() {}
 	void print();
 
 	//    23,527,424
 	// 4,294,967,295
 
-	static AudioData loadFromWavFile(const char * path) 
+	static AudioData loadFromWavFile(std::filesystem::path &path)
     {
 		SDL_AudioSpec r_spec;
-		uint8_t *r_data;
-		uint32_t r_data_len;
         std::vector<uint8_t> r_data;
 
         struct RIFFChunk {
@@ -111,7 +120,7 @@ struct AudioData
             case 32:
                 r_spec.format = SDL_AUDIO_S32; break;
             default:
-                throw std::runtime_error("Unsupported bit depth for PCM.");
+                throw std::runtime_error("Unsupported PCM bit depth of " + std::to_string(bitsPerSample));
             }
             break;
         case 3:
@@ -120,7 +129,7 @@ struct AudioData
             case 32:
                 r_spec.format = SDL_AUDIO_F32; break;
             default:
-                throw std::runtime_error("Unsupported bit depth for float.");
+                throw std::runtime_error("Unsupported float bit depth of " + std::to_string(bitsPerSample));
             }
             break;
         default:
@@ -128,18 +137,18 @@ struct AudioData
         }
 
 
-        // Extract Data from data chunk
+        // Extract samples from data chunk
         chunk = chunks.at("data");
+        size_t data_size = chunk.chunk_size;
         if (chunk.chunk_size == 0xFFFFFFFF || chunk.chunk_size == 0x00000000)
         {
             infile.seekg(0, std::ios::end);
-            dataSize = static_cast<size_t>(infile.tellg()) - chunk.data;
+            data_size = static_cast<size_t>(infile.tellg()) - chunk.data_start;
         }
-        r_data = chunk.data_start;
-
-
-		// if(!SDL_LoadWAV(path, &r_spec, &r_data, &r_data_len))
-   		//	throw std::runtime_error(std::string("Failed to load wav file.\n[SDL]:") + SDL_GetError());
-		return AudioData{r_spec, r_data, r_data_len};
+        r_data.resize(data_size);
+	    infile.seekg(chunk.data_start, std::ios::beg);
+	    infile.read(reinterpret_cast<char*>(r_data.data()), data_size);
+        r_data.shrink_to_fit();
+		return AudioData{std::move(path), r_spec, std::move(r_data)};
 	};
 };
