@@ -47,8 +47,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 			g_audioData = std::make_shared<AudioData>(
 				AudioData::loadFromWavFile(dropped_file_path)
 			);
-			// g_audioData->print();
 			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
+			g_audioPlayer->print();
 		} catch (const std::exception &e) {
 			g_audioData = nullptr;
 			g_audioPlayer = nullptr;

@@ -19,11 +19,13 @@ AudioPlayer::AudioPlayer(const AudioData &audio_data)
     if (!SDL_BindAudioStream(m_device_id, m_audio_stream))
         throw std::runtime_error(std::string("Failed to bind audio stream.\n[SDL]:") + SDL_GetError());
 
-    m_playing = false;
-    SDL_PauseAudioDevice(m_device_id);
-    // Minimum is one second of audio
-    // m_minimum_audio = static_cast<int>
-    // 	(m_audioData.sampleRate * m_audioData.bitsPerSample * m_audioData.nChannels);
+    // Calculate minimum samples that have to be present int the os buffer
+    m_minimum_audio =
+        m_out_spec.channels * m_out_spec.freq * 4; // 4 is size of 32-Bit float
+
+    // Start playback
+    m_playing = true;
+    SDL_ResumeAudioDevice(m_device_id);
 };
 
 void AudioPlayer::togglePlayback() {
@@ -39,12 +41,14 @@ void AudioPlayer::togglePlayback() {
 }
 
 void AudioPlayer::feedSamples() {
-    if (SDL_GetAudioStreamQueued(m_audio_stream) < m_audio_data.data.size()) {
+    if (SDL_GetAudioStreamQueued(m_audio_stream) < m_minimum_audio) {
+        std::cout << "Refilling " << SDL_GetAudioStreamQueued(m_audio_stream) << " Bytes" << std::endl;
         if (!SDL_PutAudioStreamData(
-            m_audio_stream, m_audio_data.data.data(), static_cast<int>(m_audio_data.data.size())
+            m_audio_stream, m_audio_data.data.data() + m_audio_cursor, m_minimum_audio
         )) {
             throw std::runtime_error(std::string("Failed to put audio stream data.\n[SDL]:") + SDL_GetError());
         }
+        m_audio_cursor += m_minimum_audio;
     }
 }
 

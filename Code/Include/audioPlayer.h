@@ -12,13 +12,15 @@ private:
 		.freq = 44200
 	};
 
-	SDL_AudioDeviceID m_device_id;
-	SDL_AudioStream *m_audio_stream;
+	SDL_AudioDeviceID m_device_id = 0;
+	SDL_AudioStream *m_audio_stream = nullptr;
 
 	const AudioData &m_audio_data; // TODO Change to shared pointer
 	bool m_playing;
 	size_t m_cursor = 0;
-	// int m_minimum_audio;
+
+	size_t m_audio_cursor = 0;
+	int m_minimum_audio;
 
 public:
 	AudioPlayer(const AudioData &audioData);
@@ -26,7 +28,10 @@ public:
 	void togglePlayback();
 	void feedSamples();
 	void print() {
-		std::cout << std::format("Device Name:\t{}\n", SDL_GetAudioDeviceName(m_device_id));
+		std::cout << std::format("Device ID:\t{}\n", m_device_id); // Doesn't have a device name fsr
+		std::cout << std::format("Channels:\t{}\n", m_out_spec.channels);
+		std::cout << std::format("Frequency:\t{}\n", m_out_spec.freq);
+		std::cout << std::endl;
 	}
 	~AudioPlayer();
 };

@@ -49,7 +49,7 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
         // Allocate variables to read into
         std::unordered_map<std::string, RIFFChunk> chunks;
         std::string chunk_name(4, '\0');
-        RIFFChunk chunk;
+        RIFFChunk chunk = {};
         size_t filesize = 0;
 
         // Verify RIFF Header
@@ -57,12 +57,12 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
         if (strcmp(&chunk_name[0], "RIFF") != 0)
             throw std::runtime_error("Invalid wav file.");
 
-        // Get filesize and validate if neccesary
+        // Get filesize and validate if necessary
         infile.read(reinterpret_cast<char*>(&filesize), 4);
         if (filesize == 0xffffffff || filesize == 0x0000)
             filesize = std::filesystem::file_size(path) - 8;
 
-        // Verify WAVE Signeature
+        // Verify WAVE Signature
         infile.read(&chunk_name[0], 4);
         if (strcmp(&chunk_name[0], "WAVE") != 0)
             throw std::runtime_error("Invalid wav file.");
@@ -128,7 +128,6 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
         default:
             throw std::runtime_error(std::string("Wav file not supported.\n[SDL]:") + SDL_GetError());
         }
-
 
         // Extract samples from data chunk
         chunk = chunks.at("data");
