@@ -71,14 +71,14 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 	if (g_audioPlayer)
 		g_audioPlayer->feedSamples();
 
-
-
+	SDL_Delay(17); // ~ 60 Hz
 	return SDL_APP_CONTINUE;
 }
 
 /* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
-    /* SDL will clean up the window/renderer for us. */
+	g_audioData.reset();
+	g_audioPlayer.reset();
 }
 

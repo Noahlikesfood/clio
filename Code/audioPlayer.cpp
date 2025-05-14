@@ -39,7 +39,6 @@ void AudioPlayer::togglePlayback() {
 }
 
 void AudioPlayer::feedSamples() {
-    std::cout << SDL_GetAudioStreamQueued(m_audio_stream) << std::endl;
     if (SDL_GetAudioStreamQueued(m_audio_stream) < m_audio_data.data.size()) {
         if (!SDL_PutAudioStreamData(
             m_audio_stream, m_audio_data.data.data(), static_cast<int>(m_audio_data.data.size())

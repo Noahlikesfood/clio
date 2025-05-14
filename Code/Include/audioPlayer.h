@@ -15,7 +15,7 @@ private:
 	SDL_AudioDeviceID m_device_id;
 	SDL_AudioStream *m_audio_stream;
 
-	const AudioData &m_audio_data;
+	const AudioData &m_audio_data; // TODO Change to shared pointer
 	bool m_playing;
 	size_t m_cursor = 0;
 	// int m_minimum_audio;
