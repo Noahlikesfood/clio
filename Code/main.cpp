@@ -1,5 +1,4 @@
-#include "audioData.h"
-#include "audioPlayer.h"
+#include "AudioVisualizer.h"
 
 #include <memory>
 #include <iostream>
@@ -10,9 +9,10 @@
 
 std::shared_ptr<AudioData> g_audioData;
 std::shared_ptr<AudioPlayer> g_audioPlayer;
+std::unique_ptr<AudioVisualizer> g_audioVisualizer;
 
-SDL_Window* window;
-SDL_Renderer* renderer;
+// SDL_Window* window;
+// SDL_Renderer* renderer;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -23,15 +23,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    if (!SDL_CreateWindowAndRenderer("Musik Visualizer", 640, 480, 0, &window, &renderer)) {
-        SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
-    }
+    // if (!SDL_CreateWindowAndRenderer("Musik Visualizer", 640, 480, 0, &window, &renderer)) {
+    //     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+    //     return SDL_APP_FAILURE;
+    // }
+
+	g_audioVisualizer = std::make_unique<AudioVisualizer>("test", 400, 400);
 
     return SDL_APP_CONTINUE;
 }
 
-/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
+/* Handles all events for all windows since there will only be one song playing at a time */
+/* If I was to add multi-window support, appstate would need to be modified*/
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
 	// Quitting the program
@@ -50,8 +53,8 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
 			g_audioPlayer->print();
 		} catch (const std::exception &e) {
-			g_audioData = nullptr;
-			g_audioPlayer = nullptr;
+			g_audioData.reset();
+			g_audioPlayer.reset();
 			std::cout << e.what() << std::endl;
 		}
 	}
@@ -63,6 +66,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 		}
 	}
 
+
     return SDL_APP_CONTINUE;
 }
 
@@ -70,7 +74,7 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 {
 	if (g_audioPlayer)
 		g_audioPlayer->feedSamples();
-
+	g_audioVisualizer->update();
 	SDL_Delay(17); // ~ 60 Hz
 	return SDL_APP_CONTINUE;
 }

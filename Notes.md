@@ -1,23 +1,21 @@
 # Notes
 
-## Compiling the Visualizer
-With g++:
-- no C++ 20
-``` Bash
-# Dynamic (Copy the dll over)
-g++ main.cpp -std=c++20 -I../SDL/include
-```
-With clang:
-``` Bash
-# Dynamic (Copy the dll over)
-clang-cl .\Code\main.cpp /I ".\SDL\include" /I ".\Code\Include" /std:c++20 /W4 -EHsc /MD /link /LIBPATH:".\SDL\build\Debug" SDL3.lib
-```
+## My issues with C++
+- [Multiple compilers](https://en.cppreference.com/w/cpp/compiler_support) (MSVC, GCC and Clang are never quite the same)
+- [Build system(s) and using Libs](https://en.cppreference.com/w/c/links/libs) (Really, really hard to do)
+- [Classic OOP](https://en.cppreference.com/w/cpp/keyword)
+  - ``friend`` just seems like a lazy workaround for OOP-Problems
+- [Constructors](https://en.cppreference.com/w/cpp/language/constructor) are a mindfuck
+- Having to [compile]() every cpp file separately (Include hell)
+## What I liked
+- [Move Semantics](https://www.geeksforgeeks.org/stdmove-in-utility-in-c-move-semantics-move-constructors-and-move-assignment-operators/) are a cool idea
+- Most of the standard containers
+- ``std::shared_ptr`` is just Java reference counting
 
-## Compiling SDL
-
-``` Bash
-cmake .. -DSDL_STATIC=ON -DCMAKE_BUILD_TYPE=Debug
-cmake --build .
+## Conclusion
+```Text
+If it's not performance critical, just use Java. 
+If it is, C.
 ```
 
 ## Differences between SDL Versions
@@ -92,7 +90,7 @@ SDL_Quit();
 ```
 
 ### SDL3
-Look at `audioVisualizer.h`
+Look at the code.
 
-## Ressources
+## Resources
 https://patorjk.com/software/taag/#p=display&h=2&f=Doom&t=Unit%20Tests

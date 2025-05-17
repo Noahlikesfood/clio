@@ -18,8 +18,9 @@ set(LIBS SDL3.lib)
 # Main executable
 add_executable(main
         Code/main.cpp
-        Code/audioData.cpp
-        Code/audioPlayer.cpp
+        Code/AudioData.cpp
+        Code/AudioPlayer.cpp
+        Code/AudioVisualizer.cpp
 )
 target_link_libraries(main PRIVATE ${LIBS})
 
