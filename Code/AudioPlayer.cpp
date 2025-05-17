@@ -7,16 +7,16 @@ AudioPlayer::AudioPlayer(const AudioData &audio_data)
     m_device_id = SDL_OpenAudioDevice(
         SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &m_spec);
     if (m_device_id == 0)
-        throw std::runtime_error(std::string("Failed to initialize audio device.\n[SDL]:") + SDL_GetError());
+        throw std::runtime_error(std::string("Failed to initialize audio device.\n[SDL]: ") + SDL_GetError());
 
     // Create audio stream
     m_playback_stream = SDL_CreateAudioStream(
         &m_audio_data.spec, &m_spec);
     if (m_playback_stream == nullptr)
-        throw std::runtime_error(std::string("Failed to bind audio device.\n[SDL]:") + SDL_GetError());
+        throw std::runtime_error(std::string("Failed to bind audio device.\n[SDL]: ") + SDL_GetError());
     // Bind it to the device
     if (!SDL_BindAudioStream(m_device_id, m_playback_stream))
-        throw std::runtime_error(std::string("Failed to bind audio stream.\n[SDL]:") + SDL_GetError());
+        throw std::runtime_error(std::string("Failed to bind audio stream.\n[SDL]: ") + SDL_GetError());
 
     // Calculate minimum samples that have to be present int the os buffer
     m_minimum_audio =
@@ -45,8 +45,15 @@ void AudioPlayer::feedSamples() {
         if (!SDL_PutAudioStreamData(
             m_playback_stream, m_audio_data.data.data() + m_audio_cursor, m_minimum_audio
         )) {
-            throw std::runtime_error(std::string("Failed to put audio stream data.\n[SDL]:") + SDL_GetError());
+            throw std::runtime_error(std::string("Failed to put data into the playback stream.\n[SDL]: ") + SDL_GetError());
         }
+
+        if (!SDL_PutAudioStreamData(
+            m_output_stream, m_audio_data.data.data() + m_audio_cursor, m_minimum_audio
+        )) {
+            throw std::runtime_error(std::string("Failed to put data into the output stream.\n[SDL]: ") + SDL_GetError());
+        }
+
         m_audio_cursor += m_minimum_audio;
     }
 }

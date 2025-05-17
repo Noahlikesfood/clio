@@ -7,10 +7,13 @@
   - ``friend`` just seems like a lazy workaround for OOP-Problems
 - [Constructors](https://en.cppreference.com/w/cpp/language/constructor) are a mindfuck
 - Having to [compile]() every cpp file separately (Include hell)
+- False sense of security with exceptions.
+
 ## What I liked
 - [Move Semantics](https://www.geeksforgeeks.org/stdmove-in-utility-in-c-move-semantics-move-constructors-and-move-assignment-operators/) are a cool idea
 - Most of the standard containers
 - ``std::shared_ptr`` is just Java reference counting
+- Multiple Inheritance
 
 ## Conclusion
 ```Text

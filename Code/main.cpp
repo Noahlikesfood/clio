@@ -3,6 +3,8 @@
 #include <memory>
 #include <iostream>
 
+static_assert(sizeof(float) == 4);
+
 #define SDL_MAIN_USE_CALLBACKS 1  /* use the callbacks instead of main() */
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
@@ -10,9 +12,6 @@
 std::shared_ptr<AudioData> g_audioData;
 std::shared_ptr<AudioPlayer> g_audioPlayer;
 std::unique_ptr<AudioVisualizer> g_audioVisualizer;
-
-// SDL_Window* window;
-// SDL_Renderer* renderer;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
@@ -23,18 +22,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 
-    // if (!SDL_CreateWindowAndRenderer("Musik Visualizer", 640, 480, 0, &window, &renderer)) {
-    //     SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
-    //     return SDL_APP_FAILURE;
-    // }
-
 	g_audioVisualizer = std::make_unique<AudioVisualizer>("test", 400, 400);
 
     return SDL_APP_CONTINUE;
 }
 
-/* Handles all events for all windows since there will only be one song playing at a time */
-/* If I was to add multi-window support, appstate would need to be modified*/
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
 	// Quitting the program
@@ -51,6 +43,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 				AudioData::loadFromWavFile(dropped_file_path)
 			);
 			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
+			g_audioVisualizer->connect(g_audioPlayer.get());
 			g_audioPlayer->print();
 		} catch (const std::exception &e) {
 			g_audioData.reset();
@@ -66,23 +59,26 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 		}
 	}
 
-
     return SDL_APP_CONTINUE;
 }
 
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-	if (g_audioPlayer)
-		g_audioPlayer->feedSamples();
-	g_audioVisualizer->update();
+	if (g_audioPlayer) {
+		try {
+			g_audioPlayer->feedSamples();
+			g_audioVisualizer->update();
+		} catch (const std::exception &e) {
+			std::cerr << e.what() << std::endl;
+			return SDL_APP_FAILURE;}
+	}
+
 	SDL_Delay(17); // ~ 60 Hz
 	return SDL_APP_CONTINUE;
 }
 
-/* This function runs once at shutdown. */
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
 	g_audioData.reset();
 	g_audioPlayer.reset();
 }
-

@@ -1,7 +1,3 @@
-//
-// Created by noahk on 16.05.2025.
-//
-
 #include "Include/AudioVisualizer.h"
 
 AudioVisualizer::AudioVisualizer(std::string name, int width, int height) {

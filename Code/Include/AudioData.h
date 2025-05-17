@@ -35,8 +35,5 @@ struct AudioData
 	~AudioData() {}
 	void print();
 
-	//    23,527,424
-	// 4,294,967,295
-
 	static AudioData loadFromWavFile(std::filesystem::path &path);
 };
