@@ -4,7 +4,7 @@ AudioVisualizer::AudioVisualizer(std::string name, int width, int height) {
     SDL_CreateWindowAndRenderer(
         name.c_str(),
         width, height,
-        SDL_WINDOW_HIGH_PIXEL_DENSITY | SDL_WINDOW_ALWAYS_ON_TOP,
+        SDL_WINDOW_HIGH_PIXEL_DENSITY /* | SDL_WINDOW_ALWAYS_ON_TOP */,
         &m_window, &m_renderer
     );
 

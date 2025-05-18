@@ -21,7 +21,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
-
+	// VISUALIZER SHOULD GET FED:: I THINK
 	g_audioVisualizer = std::make_unique<AudioVisualizer>("test", 400, 400);
 
     return SDL_APP_CONTINUE;
@@ -43,7 +43,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 				AudioData::loadFromWavFile(dropped_file_path)
 			);
 			g_audioPlayer = std::make_shared<AudioPlayer>(*g_audioData);
-			g_audioVisualizer->connect(g_audioPlayer.get());
 			g_audioPlayer->print();
 		} catch (const std::exception &e) {
 			g_audioData.reset();

@@ -7,7 +7,6 @@ class AudioVisualizer;
 
 class AudioPlayer
 {
-	friend AudioVisualizer;
 	// Specification of the output format is allways the same
 	const SDL_AudioSpec m_spec = {
 		.format = SDL_AUDIO_F32,
@@ -17,27 +16,15 @@ class AudioPlayer
 
 	SDL_AudioDeviceID m_device_id = 0;
 	SDL_AudioStream *m_playback_stream = nullptr;
-	SDL_AudioStream *m_output_stream = nullptr;
 
 	const AudioData &m_audio_data; // TODO Change to shared pointer
 	bool m_playing;
-	size_t m_cursor = 0;
 
 	size_t m_audio_cursor = 0;
 	int m_minimum_audio; // Minimum number of samples in the que at any given point in bytes
 
 public:
 	explicit AudioPlayer(const AudioData &audioData);
-
-	SDL_AudioStream *connect(SDL_AudioSpec out_spec) {
-		if (m_output_stream) throw std::runtime_error("AudioPlayer::connect: already connected");
-
-		m_output_stream = SDL_CreateAudioStream(&m_spec, &out_spec);
-		if (!m_output_stream)
-			throw std::runtime_error("Failed to create audio stream");
-
-		return m_output_stream;
-	}
 
 	void togglePlayback();
 	void feedSamples();

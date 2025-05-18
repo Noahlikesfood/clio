@@ -32,7 +32,8 @@ void AudioData::print() {
 
 AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
     {
-		SDL_AudioSpec r_spec;
+        // Allocate space for the data that will be read
+        SDL_AudioSpec r_spec;
         std::vector<uint8_t> r_data;
 
         struct RIFFChunk {
@@ -141,5 +142,28 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
 	    infile.seekg(chunk.data_start, std::ios::beg);
 	    infile.read(reinterpret_cast<char*>(r_data.data()), data_size);
         r_data.shrink_to_fit();
-		return AudioData{std::move(path), r_spec, std::move(r_data)};
+
+        // Convert everything to normal F32
+        SDL_AudioSpec target_spec = {
+            .format = SDL_AUDIO_F32,
+            .channels = 1,
+            .freq = 44100,
+        };
+        std::vector<uint8_t> target_data;
+        uint8_t *target_buffer;
+        int target_buffer_size;
+        if (!SDL_ConvertAudioSamples(
+            &r_spec,
+            r_data.data(),
+            r_data.size(),
+            &target_spec,
+            &target_buffer,
+            &target_buffer_size
+        )) {
+            throw std::runtime_error("Failed to convert audio data.");
+        }
+        target_data.assign(target_buffer, target_buffer + target_buffer_size);
+
+
+		return AudioData{std::move(path), target_spec, std::move(target_data)};
 	};

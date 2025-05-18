@@ -19,6 +19,7 @@ AudioPlayer::AudioPlayer(const AudioData &audio_data)
         throw std::runtime_error(std::string("Failed to bind audio stream.\n[SDL]: ") + SDL_GetError());
 
     // Calculate minimum samples that have to be present int the os buffer
+    // I chose one second worth of samples
     m_minimum_audio =
         m_spec.channels * m_spec.freq * 4; // 4 is size of 32-Bit float
 
@@ -46,12 +47,6 @@ void AudioPlayer::feedSamples() {
             m_playback_stream, m_audio_data.data.data() + m_audio_cursor, m_minimum_audio
         )) {
             throw std::runtime_error(std::string("Failed to put data into the playback stream.\n[SDL]: ") + SDL_GetError());
-        }
-
-        if (!SDL_PutAudioStreamData(
-            m_output_stream, m_audio_data.data.data() + m_audio_cursor, m_minimum_audio
-        )) {
-            throw std::runtime_error(std::string("Failed to put data into the output stream.\n[SDL]: ") + SDL_GetError());
         }
 
         m_audio_cursor += m_minimum_audio;

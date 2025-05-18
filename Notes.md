@@ -15,6 +15,10 @@
 - ``std::shared_ptr`` is just Java reference counting
 - Multiple Inheritance
 
+## Thoughts on the Architecture
+The visualizer having a reference to the player
+- Can't get the samples, bc the stream is buffered
+
 ## Conclusion
 ```Text
 If it's not performance critical, just use Java. 
