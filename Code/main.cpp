@@ -66,12 +66,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 	if (g_audioPlayer) {
 		try {
 			g_audioPlayer->feedSamples();
-			g_audioVisualizer->update();
 		} catch (const std::exception &e) {
 			std::cerr << e.what() << std::endl;
 			return SDL_APP_FAILURE;}
 	}
-
+	g_audioVisualizer->update();
 	SDL_Delay(17); // ~ 60 Hz
 	return SDL_APP_CONTINUE;
 }

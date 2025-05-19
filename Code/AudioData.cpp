@@ -3,12 +3,12 @@
 #include <format>
 
 void AudioData::print() {
-    std::cout << std::format("Path:    \t{}", path.string()) << std::endl;
-    std::cout << std::format("Sample Rate:\t{} Hz", spec.freq) << std::endl;
-    std::cout << std::format("Channels:\t{}", spec.channels)	<< std::endl;
-    std::cout << std::format("Size:    \t{} Bytes", data.size()) << std::endl;
+    std::cout << std::format("Path:    \t{}", m_path.string()) << std::endl;
+    std::cout << std::format("Sample Rate:\t{} Hz", m_spec.freq) << std::endl;
+    std::cout << std::format("Channels:\t{}", m_spec.channels)	<< std::endl;
+    std::cout << std::format("Size:    \t{} Bytes", m_data.size()) << std::endl;
     int sample_size = 0;
-    switch (spec.format) {
+    switch (m_spec.format) {
         case SDL_AUDIO_F32:
             sample_size = 4;
             std::cout << std::format("Format:  \tF32") << std::endl; break;
@@ -25,7 +25,7 @@ void AudioData::print() {
             throw std::runtime_error("Invalid Audio Format State");
     }
     std::cout << std::format("Duration:\t{:1} Seconds",
-        static_cast<float>(data.size()) / static_cast<float>(sample_size * spec.freq * spec.channels)
+        static_cast<float>(m_data.size()) / static_cast<float>(sample_size * m_spec.freq * m_spec.channels)
     ) << std::endl;
     std::cout << std::endl;
 }
@@ -149,7 +149,7 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
             .channels = 1,
             .freq = 44100,
         };
-        std::vector<uint8_t> target_data;
+        std::vector<float> target_data;
         uint8_t *target_buffer;
         int target_buffer_size;
         if (!SDL_ConvertAudioSamples(
@@ -162,8 +162,16 @@ AudioData AudioData::loadFromWavFile(std::filesystem::path &path)
         )) {
             throw std::runtime_error("Failed to convert audio data.");
         }
-        target_data.assign(target_buffer, target_buffer + target_buffer_size);
+        if (target_buffer == nullptr)
+            throw std::runtime_error("Failed to convert audio data.");
 
+        size_t float_count = target_buffer_size / sizeof(float);
+        target_data.assign(
+            reinterpret_cast<float *>(target_buffer),
+            reinterpret_cast<float *>(target_buffer) + float_count
+        );
 
+        SDL_free(target_buffer);
+    
 		return AudioData{std::move(path), target_spec, std::move(target_data)};
 	};

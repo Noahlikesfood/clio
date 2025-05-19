@@ -17,14 +17,13 @@ class AudioPlayer
 	SDL_AudioDeviceID m_device_id = 0;
 	SDL_AudioStream *m_playback_stream = nullptr;
 
-	const AudioData &m_audio_data; // TODO Change to shared pointer
+	AudioData &m_audio_data; // TODO Change to shared pointer
 	bool m_playing;
 
-	size_t m_audio_cursor = 0;
 	int m_minimum_audio; // Minimum number of samples in the que at any given point in bytes
 
 public:
-	explicit AudioPlayer(const AudioData &audioData);
+	explicit AudioPlayer(AudioData &audioData);
 
 	void togglePlayback();
 	void feedSamples();
