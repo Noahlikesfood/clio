@@ -31,8 +31,11 @@ public:
 	~AudioData() {}
 	void print();
 
-	SDL_AudioSpec *get_spec() { return &m_spec; }
-	float *getCurrentPosition() {return m_data.data() + playback_cursor;}
+	SDL_AudioSpec *getSpec() { return &m_spec; }
+	float *getStart() { return m_data.data(); }
+	float *getEnd() { return m_data.data() + m_data.size(); }
+	float *getCurrent() {return m_data.data() + playback_cursor;}
+	size_t getSampleCount() { return m_data.size(); }
 	void advanceCursor(size_t offset) {
 		offset /= sizeof(float);
 		if (playback_cursor + offset >= m_data.size()) {

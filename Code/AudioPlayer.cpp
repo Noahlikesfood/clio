@@ -11,7 +11,7 @@ AudioPlayer::AudioPlayer(AudioData &audio_data)
 
     // Create audio stream
     m_playback_stream = SDL_CreateAudioStream(
-        m_audio_data.get_spec(), &m_spec);
+        m_audio_data.getSpec(), &m_spec);
     if (m_playback_stream == nullptr)
         throw std::runtime_error(std::string("Failed to bind audio device.\n[SDL]: ") + SDL_GetError());
     // Bind it to the device
@@ -43,9 +43,9 @@ void AudioPlayer::togglePlayback() {
 void AudioPlayer::feedSamples() {
     if (SDL_GetAudioStreamQueued(m_playback_stream) < m_minimum_audio) {
         const size_t bytes_to_refill = m_minimum_audio - SDL_GetAudioStreamQueued(m_playback_stream);
-        std::cout << "Refilling " << bytes_to_refill << " Bytes" << std::endl;
+        // std::cout << "Refilling " << bytes_to_refill << " Bytes" << std::endl;
         if (!SDL_PutAudioStreamData(
-            m_playback_stream, m_audio_data.getCurrentPosition(), bytes_to_refill
+            m_playback_stream, m_audio_data.getCurrent(), bytes_to_refill
         )) {
             throw std::runtime_error(std::string("Failed to put data into the playback stream.\n[SDL]: ") + SDL_GetError());
         }

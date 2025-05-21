@@ -10,7 +10,7 @@ class AudioPlayer
 	// Specification of the output format is allways the same
 	const SDL_AudioSpec m_spec = {
 		.format = SDL_AUDIO_F32,
-		.channels = 2,
+		.channels = 1,
 		.freq = 44200
 	};
 
