@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Include directories
 include_directories(${CMAKE_SOURCE_DIR}/SDL/include)
 include_directories(${CMAKE_SOURCE_DIR}/Code/Include)
+include_directories(${CMAKE_SOURCE_DIR}/dj_fft)
 
 # Link directories and libraries
 link_directories(${CMAKE_SOURCE_DIR}/SDL/cmake-build-debug/Debug)

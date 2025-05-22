@@ -8,6 +8,7 @@
 
 #include "AudioData.h"
 #include "AudioPlayer.h"
+#include "dj_fft.h"
 
 class AudioVisualizer
 {
@@ -21,7 +22,7 @@ class AudioVisualizer
     float *m_samples_start = nullptr;
     float *m_samples_end = nullptr;
 
-    float m_fft_result;
+    std::vector<float> m_fft_result;
 
 public:
     AudioVisualizer(std::string name, int width, int height);
@@ -54,7 +55,6 @@ public:
             m_fft_result = doFourierTransform(m_samples_cursor, m_samples_cursor+fft_samples_per_frame);
         }
 
-        // std::cout << m_fft_result << std::endl;
 
         SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
         SDL_RenderClear(m_renderer);
@@ -62,13 +62,5 @@ public:
         return SDL_APP_CONTINUE;
     }
 
-    float doFourierTransform(float *samples_start, float *samples_end) {
-        float accumulator = 0.0;
-        while (samples_start < samples_end) {
-            accumulator += *samples_start;
-            samples_start++;
-        }
-        std::cout << accumulator / static_cast<float>(fft_samples_per_frame) << std::endl;
-        return accumulator /= static_cast<float>(fft_samples_per_frame);
-    }
+    std::vector<float> doFourierTransform(float *samples_start, float *samples_end);
 };
