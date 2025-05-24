@@ -47,5 +47,5 @@ public:
 
     void renderCircle();
 
-    std::vector<float> doFourierTransform(float *samples_start, float *samples_end);
+    std::vector<float> doFourierTransform(float *samples_start, size_t num_samples);
 };

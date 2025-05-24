@@ -18,21 +18,30 @@ AudioVisualizer::AudioVisualizer(std::string name, int width, int height)
         throw std::runtime_error("Failed to create window and renderer");
 }
 
-std::vector<float> AudioVisualizer::doFourierTransform(float *samples_start, float *samples_end)
+std::vector<float> AudioVisualizer::doFourierTransform(float *samples_start, size_t num_samples)
 {
     dj::fft_arg<float> input;
     // Convert to complex values
-    for (int i = 0; i < fft_samples_per_frame; i++)
+    input.resize(num_samples);
+    for (int i = 0; i < num_samples; i++)
     {
-        input.emplace_back(
-            std::complex<float>(samples_start[i], 0.0f)
-        );
+        input[i] = std::complex<float>(samples_start[i], 0.0f);
     }
-    // Hand over to the library
+    // DJ can only handle inputs that have sizes that are a power of two,
+    // so we round up to the next power of to and fill with 0s.
+    if (std::fmod(log2(num_samples), 1.0) != 0) {
+        input.resize(
+            std::ceil(log2(num_samples))
+        );
+        for (int i = num_samples; i < input.size(); i++)
+            input[i] = 0.0f;
+    }
+    // Hand over to the library and convert from complex to real values
     auto output = dj::fft1d(input, dj::fft_dir::DIR_FWD);
     std::vector<float> result;
-    for (auto &o : output) {
-        result.push_back(std::abs(o) / static_cast<float>(fft_samples_per_frame / 2));
+    result.resize(num_samples);
+    for (int i = 0; i < num_samples; i++) {
+        result[i] = std::abs(output[i]) / static_cast<float>(num_samples / 2);
     }
     // Print the values to the console
     // for (auto &r : result) {
@@ -56,10 +65,13 @@ SDL_AppResult AudioVisualizer::update() {
         return SDL_APP_CONTINUE;
     // Do Fourier Analysis on the selected window
     m_samples_cursor = m_audio_data->getCurrent();
-    if (m_samples_cursor+fft_samples_per_frame > m_samples_end) {
-        m_fft_result = doFourierTransform(m_samples_cursor, m_samples_end);
+    if (m_samples_cursor + fft_samples_per_frame > m_samples_end) {
+        m_fft_result = doFourierTransform(
+            m_samples_cursor,
+            static_cast<size_t>(m_samples_end - m_samples_cursor)
+        );
     } else {
-        m_fft_result = doFourierTransform(m_samples_cursor, m_samples_cursor+fft_samples_per_frame);
+        m_fft_result = doFourierTransform(m_samples_cursor, fft_samples_per_frame);
     }
 
     SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
@@ -86,8 +98,8 @@ void AudioVisualizer::renderCircle()
     {
         vertices[i] = {
             .position = {
-                .x = 50 * cos( angle_step * (i-1) ),
-                .y = 50 * sin( angle_step * (i-1) ),
+                .x = 50 * cos( angle_step * (i-1) ) * (1 + 200 * m_fft_result[i-1]),
+                .y = 50 * sin( angle_step * (i-1) ) * (1 + 200 * m_fft_result[i-1]),
             },
             .color = {0, 0}, .tex_coord = {0, 0}
         };

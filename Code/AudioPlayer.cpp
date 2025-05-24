@@ -42,8 +42,11 @@ void AudioPlayer::togglePlayback() {
 
 void AudioPlayer::feedSamples() {
     if (SDL_GetAudioStreamQueued(m_playback_stream) < m_minimum_audio) {
-        const size_t bytes_to_refill = m_minimum_audio - SDL_GetAudioStreamQueued(m_playback_stream);
+        size_t bytes_to_refill = m_minimum_audio - SDL_GetAudioStreamQueued(m_playback_stream);
         // std::cout << "Refilling " << bytes_to_refill << " Bytes" << std::endl;
+        size_t bytes_available = (m_audio_data.getEnd() - m_audio_data.getCurrent()) * sizeof(float);
+        if (bytes_to_refill > bytes_available)
+            bytes_to_refill = bytes_available;
         if (!SDL_PutAudioStreamData(
             m_playback_stream, m_audio_data.getCurrent(), bytes_to_refill
         )) {
