@@ -48,6 +48,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 		} catch (const std::exception &e) {
 			g_audioData.reset();
 			g_audioPlayer.reset();
+			g_audioVisualizer->resetAudioData();
 			std::cout << e.what() << std::endl;
 		}
 	}

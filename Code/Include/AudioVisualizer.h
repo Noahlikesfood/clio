@@ -13,6 +13,9 @@
 class AudioVisualizer
 {
     SDL_Window* m_window;
+    const int m_window_width;
+    const int m_window_height;
+
     SDL_Renderer* m_renderer;
 
     size_t fft_samples_per_frame = 1024;
@@ -34,33 +37,15 @@ public:
         m_samples_start = audioData->getStart();
         m_samples_end = audioData->getEnd();
     }
-
-    SDL_AppResult update()
-    {
-        // If there is no data, draw a black screen
-        if (!m_audio_data) {
-            SDL_SetRenderDrawColorFloat(m_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE_FLOAT);
-            SDL_RenderClear(m_renderer);
-            SDL_RenderPresent(m_renderer);
-            return SDL_APP_CONTINUE;
-        }
-        // If pointer has not changed, return
-        if (m_audio_data->getCurrent() == m_samples_cursor)
-            return SDL_APP_CONTINUE;
-        // Do Fourier Analysis on the selected window
-        m_samples_cursor = m_audio_data->getCurrent();
-        if (m_samples_cursor+fft_samples_per_frame > m_samples_end) {
-            m_fft_result = doFourierTransform(m_samples_cursor, m_samples_end);
-        } else {
-            m_fft_result = doFourierTransform(m_samples_cursor, m_samples_cursor+fft_samples_per_frame);
-        }
-
-
-        SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
-        SDL_RenderClear(m_renderer);
-        SDL_RenderPresent(m_renderer);
-        return SDL_APP_CONTINUE;
+    void resetAudioData() {
+        m_audio_data.reset();
+        m_samples_start = nullptr;
+        m_samples_end = nullptr;
     }
+
+    SDL_AppResult update();
+
+    void renderCircle();
 
     std::vector<float> doFourierTransform(float *samples_start, float *samples_end);
 };
