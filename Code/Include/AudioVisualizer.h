@@ -10,6 +10,12 @@
 #include "AudioPlayer.h"
 #include "dj_fft.h"
 
+typedef enum {
+    DRAW_CIRCLE = 0,
+    DRAW_GRAPH = 1,
+    DRAW_MAX
+} DRAW_MODE;
+
 class AudioVisualizer
 {
     SDL_Window* m_window;
@@ -25,7 +31,15 @@ class AudioVisualizer
     float *m_samples_start = nullptr;
     float *m_samples_end = nullptr;
 
+    float *m_sample_window_start = nullptr;
+    float *m_sample_window_end = nullptr;
+
     std::vector<float> m_fft_result;
+
+    void renderCircle();
+    void renderGraph();
+    uint8_t m_renderType;
+    std::vector<float> doFourierTransform(float *samples_start, size_t num_samples);
 
 public:
     AudioVisualizer(std::string name, int width, int height);
@@ -43,9 +57,11 @@ public:
         m_samples_end = nullptr;
     }
 
+    void cycleRenderStyle() {
+        m_renderType++;
+        if (m_renderType == DRAW_MAX)
+            m_renderType = DRAW_CIRCLE;
+    }
+
     SDL_AppResult update();
-
-    void renderCircle();
-
-    std::vector<float> doFourierTransform(float *samples_start, size_t num_samples);
 };

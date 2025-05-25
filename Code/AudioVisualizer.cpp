@@ -5,7 +5,7 @@
 #include <format>
 
 AudioVisualizer::AudioVisualizer(std::string name, int width, int height)
-    : m_window_width(width), m_window_height(height)
+    : m_window_width(width), m_window_height(height), m_renderType(DRAW_CIRCLE)
 {
     SDL_CreateWindowAndRenderer(
         name.c_str(),
@@ -31,7 +31,7 @@ std::vector<float> AudioVisualizer::doFourierTransform(float *samples_start, siz
     // so we round up to the next power of to and fill with 0s.
     if (std::fmod(log2(num_samples), 1.0) != 0) {
         input.resize(
-            std::ceil(log2(num_samples))
+            std::pow(2, std::ceil(log2(num_samples)))
         );
         for (int i = num_samples; i < input.size(); i++)
             input[i] = 0.0f;
@@ -52,7 +52,8 @@ std::vector<float> AudioVisualizer::doFourierTransform(float *samples_start, siz
     return result;
 }
 
-SDL_AppResult AudioVisualizer::update() {
+SDL_AppResult AudioVisualizer::update()
+{
     // If there is no data, draw a black screen
     if (!m_audio_data) {
         SDL_SetRenderDrawColorFloat(m_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE_FLOAT);
@@ -65,19 +66,33 @@ SDL_AppResult AudioVisualizer::update() {
         return SDL_APP_CONTINUE;
     // Do Fourier Analysis on the selected window
     m_samples_cursor = m_audio_data->getCurrent();
-    if (m_samples_cursor + fft_samples_per_frame > m_samples_end) {
-        m_fft_result = doFourierTransform(
-            m_samples_cursor,
-            static_cast<size_t>(m_samples_end - m_samples_cursor)
-        );
-    } else {
-        m_fft_result = doFourierTransform(m_samples_cursor, fft_samples_per_frame);
+
+    // If inside first fft_samples_per_frame samples, use those
+    if (m_samples_cursor - m_samples_start < fft_samples_per_frame) {
+        m_sample_window_start = m_samples_start;
+        m_sample_window_end = m_samples_start + fft_samples_per_frame;
     }
+    // If inside last fft_samples_per_frame samples, use those
+    else if (m_samples_end - m_samples_cursor < fft_samples_per_frame) {
+        m_sample_window_start = m_samples_end - fft_samples_per_frame;
+        m_sample_window_end = m_samples_end;
+    }
+    // Otherwise use the fft_samples_per_frame frames around it
+    else {
+        m_sample_window_start = m_samples_cursor - (fft_samples_per_frame / 2);
+        m_sample_window_end = m_samples_cursor + (fft_samples_per_frame / 2);
+    }
+
+    m_fft_result = doFourierTransform(m_sample_window_start, fft_samples_per_frame);
 
     SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
     SDL_RenderClear(m_renderer);
 
-    renderCircle();
+    switch (m_renderType) {
+        case DRAW_CIRCLE: renderCircle(); break;
+        case DRAW_GRAPH: renderGraph(); break;
+        default: throw std::runtime_error("Invalid render type");
+    }
 
     SDL_RenderPresent(m_renderer);
     return SDL_APP_CONTINUE;
@@ -104,6 +119,7 @@ void AudioVisualizer::renderCircle()
             .color = {0, 0}, .tex_coord = {0, 0}
         };
     }
+    // Transform so origin is in the middle
     for (auto &vertex : vertices)
         vertex.position = {vertex.position.x + m_window_width / 2, -vertex.position.y + m_window_height / 2};
 
@@ -122,4 +138,25 @@ void AudioVisualizer::renderCircle()
         std::cerr << SDL_GetError() << std::endl;
     }
 
+}
+
+void AudioVisualizer::renderGraph() {
+    std::vector<SDL_Vertex> vertices;
+
+    vertices.resize(m_fft_result.size());
+
+    for (int i = 0; i < vertices.size(); i++) {
+        vertices[i] = {
+            .position = {
+                .x = static_cast<float>(m_window_width) / vertices.size() * i, // if one is float, all are float
+                .y = m_window_height - static_cast<float>(m_window_height) / 4 * (1 + 200 * m_fft_result[i])
+            }
+        };
+    }
+
+    SDL_SetRenderDrawColor(m_renderer, 255, 0.0f, 0.0f, 255);
+
+    for (int i=0; i<vertices.size()-1; i++) {
+        SDL_RenderLine(m_renderer, vertices[i].position.x, vertices[i].position.y, vertices[i+1].position.x, vertices[i+1].position.y);
+    }
 }

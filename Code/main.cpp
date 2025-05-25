@@ -53,9 +53,14 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 		}
 	}
 	// Play and Pause
-	else if (event->type == SDL_EVENT_KEY_DOWN) {
-		if (!g_audioPlayer) return SDL_APP_CONTINUE;
-		if (event->key.scancode == SDL_SCANCODE_SPACE) {
+	else if (event->type == SDL_EVENT_KEY_DOWN)
+	{
+		if (event->key.scancode == SDL_SCANCODE_TAB)
+			g_audioVisualizer->cycleRenderStyle();
+
+		if (event->key.scancode == SDL_SCANCODE_SPACE)
+		{
+			if (!g_audioPlayer) return SDL_APP_CONTINUE;
 			g_audioPlayer->togglePlayback();
 		}
 	}
