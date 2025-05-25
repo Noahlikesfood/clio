@@ -38,11 +38,12 @@ class AudioVisualizer
 
     void renderCircle();
     void renderGraph();
+    void renderBackground();
     uint8_t m_renderType;
     std::vector<float> doFourierTransform(float *samples_start, size_t num_samples);
 
 public:
-    AudioVisualizer(std::string name, int width, int height);
+    AudioVisualizer(std::string name, int width_and_height);
 
     void setAudioData(const std::shared_ptr<AudioData> &audioData) {
         if (audioData->getSampleCount() < fft_samples_per_frame)

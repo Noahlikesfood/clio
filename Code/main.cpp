@@ -22,7 +22,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
         return SDL_APP_FAILURE;
     }
 	// VISUALIZER SHOULD GET FED:: I THINK
-	g_audioVisualizer = std::make_unique<AudioVisualizer>("test", 400, 400);
+	g_audioVisualizer = std::make_unique<AudioVisualizer>("Musik Visualizer", 600);
 
     return SDL_APP_CONTINUE;
 }
@@ -52,12 +52,12 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 			std::cout << e.what() << std::endl;
 		}
 	}
-	// Play and Pause
 	else if (event->type == SDL_EVENT_KEY_DOWN)
 	{
+		// Display Type
 		if (event->key.scancode == SDL_SCANCODE_TAB)
 			g_audioVisualizer->cycleRenderStyle();
-
+		// Play and Pause
 		if (event->key.scancode == SDL_SCANCODE_SPACE)
 		{
 			if (!g_audioPlayer) return SDL_APP_CONTINUE;

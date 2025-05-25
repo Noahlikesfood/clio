@@ -4,12 +4,12 @@
 #include <numeric>
 #include <format>
 
-AudioVisualizer::AudioVisualizer(std::string name, int width, int height)
-    : m_window_width(width), m_window_height(height), m_renderType(DRAW_CIRCLE)
+AudioVisualizer::AudioVisualizer(std::string name, int width_and_height)
+    : m_window_width(width_and_height), m_window_height(width_and_height), m_renderType(DRAW_CIRCLE)
 {
     SDL_CreateWindowAndRenderer(
         name.c_str(),
-        width, height,
+        m_window_width, m_window_height,
         SDL_WINDOW_HIGH_PIXEL_DENSITY /* | SDL_WINDOW_ALWAYS_ON_TOP */,
         &m_window, &m_renderer
     );
@@ -108,20 +108,18 @@ void AudioVisualizer::renderCircle()
 
     // Fills up the vertex buffer with the vertices of a circle
     vertices[0] = {{0, 0}, {0, 0}, {0, 0}};
-    const float angle_step = 2 * dj::Pi / static_cast<float>(m_fft_result.size());
+    const float angle_step = 2 * dj::Pi / static_cast<float>(m_fft_result.size() - 1);
     for (int i = 1; i < vertices.size(); i++)
     {
+        constexpr float gain = 200;
         vertices[i] = {
             .position = {
-                .x = 50 * cos( angle_step * (i-1) ) * (1 + 200 * m_fft_result[i-1]),
-                .y = 50 * sin( angle_step * (i-1) ) * (1 + 200 * m_fft_result[i-1]),
+                .x = m_window_width/5 * cos( angle_step * (i-1) ) * (1 + gain * m_fft_result[i-1]),
+                .y = m_window_height/5 * sin( angle_step * (i-1) ) * (1 + gain * m_fft_result[i-1]),
             },
-            .color = {0, 0}, .tex_coord = {0, 0}
+            .color = {0, 0, 0, 0}, .tex_coord = {0, 0}
         };
     }
-    // Transform so origin is in the middle
-    for (auto &vertex : vertices)
-        vertex.position = {vertex.position.x + m_window_width / 2, -vertex.position.y + m_window_height / 2};
 
     // Fills up the index buffer in a triangle fan configuration (0, 1, 2, 0, 2, 3, 0, 3, 4, ...)
     for (int i = 0; i < m_fft_result.size(); i++)
@@ -132,19 +130,55 @@ void AudioVisualizer::renderCircle()
     }
     indices[m_fft_result.size() * 3 - 1] = 1;
 
-    SDL_SetRenderDrawColor(m_renderer, 255.0f, 0.0f, 0.0f, 255);
+    const SDL_FColor colors[] = {
+        {148, 0, 211, 255}, // Violet
+        {0, 0, 255, 255},   // Blue
+        {0, 255, 0, 255},   // Green
+        {255, 255, 0, 255}, // Yellow
+        {255, 127, 0, 255}, // Orange
+        {255, 0, 0, 255},   // Red
+        {0, 0, 0, 255}    // Dark Red
+    };
 
-    if (!SDL_RenderGeometry(m_renderer, nullptr, vertices.data(), vertices.size(), indices.data(), indices.size())) {
-        std::cerr << SDL_GetError() << std::endl;
+    std::vector<SDL_Vertex> draw_vertices(vertices.size());
+    float scale = 1.0f; // start at full size
+
+    for (const auto& color : colors)
+    {
+        SDL_SetRenderDrawColor(m_renderer, color.r, color.g, color.b, color.a);
+
+        for (int i = 0; i < vertices.size(); i++) {
+            SDL_Vertex& vertex = draw_vertices[i];
+
+            vertex.color = color;
+
+            // Apply decreasing scale to shrink the geometry
+            float scaled_x = vertices[i].position.x * scale;
+            float scaled_y = vertices[i].position.y * scale;
+
+            // Center on window
+            vertex.position = {
+                scaled_x + m_window_width / 2.0f,
+                -scaled_y + m_window_height / 2.0f
+            };
+
+            vertex.tex_coord = {0.0f, 0.0f}; // Set if not using textures
+        }
+
+        if (SDL_RenderGeometry(m_renderer, nullptr, draw_vertices.data(), draw_vertices.size(), indices.data(), indices.size()) < 0) {
+            std::cerr << SDL_GetError() << std::endl;
+        }
+
+        scale *= 0.9f; // shrink further for next layer
     }
-
 }
 
-void AudioVisualizer::renderGraph() {
+void AudioVisualizer::renderGraph()
+{
     std::vector<SDL_Vertex> vertices;
-
-    vertices.resize(m_fft_result.size());
-
+    // Get rid of mirror frequencies
+    vertices.resize(m_fft_result.size() / 2);
+    // Convert to Screen coordinates
     for (int i = 0; i < vertices.size(); i++) {
         vertices[i] = {
             .position = {
