@@ -82,18 +82,18 @@ SDL_AppResult AudioVisualizer::update()
         m_sample_window_start = m_samples_cursor - (fft_samples_per_frame / 2);
         m_sample_window_end = m_samples_cursor + (fft_samples_per_frame / 2);
     }
-
+    // Calculate the fft
     m_fft_result = doFourierTransform(m_sample_window_start, fft_samples_per_frame);
-
+    // Clear the screen
     SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
     SDL_RenderClear(m_renderer);
-
+    // Present the data in the correct way
     switch (m_renderType) {
         case DRAW_CIRCLE: renderCircle(); break;
         case DRAW_GRAPH: renderGraph(); break;
         default: throw std::runtime_error("Invalid render type");
     }
-
+    // Swap buffers
     SDL_RenderPresent(m_renderer);
     return SDL_APP_CONTINUE;
 }
