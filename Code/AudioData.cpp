@@ -3,28 +3,29 @@
 #include <format>
 
 void AudioData::print() {
-    std::cout << std::format("Path:    \t{}", m_path.string()) << std::endl;
-    std::cout << std::format("Sample Rate:\t{} Hz", m_spec.freq) << std::endl;
-    std::cout << std::format("Channels:\t{}", m_spec.channels)	<< std::endl;
-    std::cout << std::format("Size:    \t{} Bytes", m_data.size()) << std::endl;
+    std::cout << "[AudioData]\n";
+    std::cout << std::format("\tPath:    \t{}", m_path.string()) << std::endl;
+    std::cout << std::format("\tSample Rate:\t{} Hz", m_spec.freq) << std::endl;
+    std::cout << std::format("\tChannels:\t{}", m_spec.channels)	<< std::endl;
+    std::cout << std::format("\tSize:    \t{} Bytes", m_data.size()) << std::endl;
     int sample_size = 0;
     switch (m_spec.format) {
         case SDL_AUDIO_F32:
             sample_size = 4;
-            std::cout << std::format("Format:  \tF32") << std::endl; break;
+            std::cout << std::format("\tFormat:  \tF32") << std::endl; break;
         case SDL_AUDIO_U8:
             sample_size = 1;
-            std::cout << std::format("Format:  \tU8") << std::endl; break;
+            std::cout << std::format("\tFormat:  \tU8") << std::endl; break;
         case SDL_AUDIO_S16:
             sample_size = 2;
-            std::cout << std::format("Format:  \tS16") << std::endl; break;
+            std::cout << std::format("\tFormat:  \tS16") << std::endl; break;
         case SDL_AUDIO_S32:
             sample_size = 4;
-            std::cout << std::format("Format:  \tS32") << std::endl; break;
+            std::cout << std::format("\tFormat:  \tS32") << std::endl; break;
         default:
             throw std::runtime_error("Invalid Audio Format State");
     }
-    std::cout << std::format("Duration:\t{:1} Seconds",
+    std::cout << std::format("\tDuration:\t{:1} Seconds",
         static_cast<float>(m_data.size()) / static_cast<float>(sample_size * m_spec.freq * m_spec.channels)
     ) << std::endl;
     std::cout << std::endl;

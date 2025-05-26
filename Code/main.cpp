@@ -37,7 +37,6 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 	if (event->type == SDL_EVENT_DROP_FILE) {
 		std::filesystem::path dropped_file_path(event->drop.data);
 		std::cout << "path: " << dropped_file_path << std::endl;
-
 		try {
 			g_audioData = std::make_shared<AudioData>(
 				AudioData::loadFromWavFile(dropped_file_path)

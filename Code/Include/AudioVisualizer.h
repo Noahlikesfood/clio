@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <memory>
 #include <stdexcept>
 
@@ -34,16 +35,26 @@ class AudioVisualizer
     float *m_sample_window_start = nullptr;
     float *m_sample_window_end = nullptr;
 
-    std::vector<float> m_fft_result;
+    std::array<float, 1024> m_fft_result;
 
     void renderCircle();
     void renderGraph();
     void renderBackground();
     uint8_t m_renderType;
-    std::vector<float> doFourierTransform(float *samples_start, size_t num_samples);
+    void doFourierTransform(float *samples_start, size_t num_samples);
+
+    std::array<float, 5> m_sin_values;
 
 public:
     AudioVisualizer(std::string name, int width_and_height);
+
+    void print() {
+        std::cout << "[Visualizer]\n";
+        std::cout << std::format("\tSize:             \t{}, {}\n", m_window_width, m_window_height);
+        std::cout << std::format("\tSamples per frame:\t{}\n", m_fft_result.size());
+        std::cout << std::format("\tRender Type:      \t{}\n", m_renderType);
+        std::cout << std::endl;
+    }
 
     void setAudioData(const std::shared_ptr<AudioData> &audioData) {
         if (audioData->getSampleCount() < fft_samples_per_frame)
@@ -56,8 +67,8 @@ public:
         m_audio_data.reset();
         m_samples_start = nullptr;
         m_samples_end = nullptr;
+        m_fft_result.fill(0.0f);
     }
-
     void cycleRenderStyle() {
         m_renderType++;
         if (m_renderType == DRAW_MAX)

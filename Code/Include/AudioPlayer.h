@@ -28,9 +28,10 @@ public:
 	void togglePlayback();
 	void feedSamples();
 	void print() {
-		std::cout << std::format("Device ID:\t{}\n", m_device_id); // Doesn't have a device name fsr
-		std::cout << std::format("Channels:\t{}\n", m_spec.channels);
-		std::cout << std::format("Frequency:\t{}\n", m_spec.freq);
+		std::cout << "[Audio Player]\n";
+		std::cout << std::format("\tDevice ID:\t{}\n", m_device_id); // Doesn't have a device name fsr
+		std::cout << std::format("\tChannels:\t{}\n", m_spec.channels);
+		std::cout << std::format("\tFrequency:\t{}\n", m_spec.freq);
 		std::cout << std::endl;
 	}
 	~AudioPlayer();
