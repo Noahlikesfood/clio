@@ -21,8 +21,10 @@ AudioVisualizer::AudioVisualizer(std::string name, int width_and_height)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> distrib(0, 1);
-    for (auto& f: m_sin_values) {
-        f = distrib(gen);
+    for (auto& arr: m_sin_values) {
+        for (auto& val: arr) {
+            val = distrib(gen);
+        }
     }
     // Zero Initialize
     m_fft_result.fill(0.0f);
@@ -106,9 +108,8 @@ SDL_AppResult AudioVisualizer::update()
 
 void AudioVisualizer::renderCircle()
 {
-    constexpr int num_circles = 4;                                // How many Faded out circles do you want?
-    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 + 1> vertices; // + 1 for midpoint
-    std::array<int, FFT_SAMPLES_PER_FRAME/2 * 3> indices;         // * 3 because triangles
+    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES + 1> vertices;     // + 1 for midpoint
+    std::array<int, (FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES) * 3> indices;           // * 3 because triangles
 
     // Fills up the index buffer in a triangle fan configuration (0, 1, 2, 0, 2, 3, 0, 3, 4, ...)
     for (int i = 0; i < indices.size()/3; i++)
@@ -119,12 +120,12 @@ void AudioVisualizer::renderCircle()
     }
     indices[indices.size() - 1] = 1; // To complete the last triangle
 
-    for (int j = 0; j < num_circles; j++)       // For each circle
+    for (int j = 0; j < NUM_CIRCLES; j++)   // For each circle
     {
         // Fills up the vertex buffer with the vertices of a circle
         vertices[0] = {{0, 0}, {0, 0, 0, .3f}, {0, 0}};
-        const float angle_step =
-        2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
+        const float angle_step = 2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
+
         for (int i = 1; i < vertices.size(); i++)   // For each point
         {
             constexpr float radius = 100.f;          // Radius of the circle
@@ -133,25 +134,27 @@ void AudioVisualizer::renderCircle()
 
             // Calculate offset for visual flair
             float offset = 0.0f;
-            for (int j = 0; j < m_sin_values.size(); ++j) {
-                float freq = j + 1;                                 // Frequency increases
-                float phase = m_sin_values[j];                      // Phase offset is randomly generated
-                offset += sinf(freq * angle + time * phase);     // Individual waves kind of "race" against each other
+            for (int q = 0; q < m_sin_values.size(); q++) {
+                float freq = q + 1;                                 // Frequency increases
+                float phase = m_sin_values[q][j];                      // Phase offset is randomly generated
+                offset += sinf(freq * angle + time * phase + phase * (j+1));     // Individual waves kind of "race" against each other
             }
-            offset /= m_sin_values.size() * 5;     // normalize and scale down
+            offset /= m_sin_values.size() * (5 + 1/(j+1) );     // normalize and scale down
 
             // X and Y-Coordinates
             float x = cosf(angle) * radius * (1 + offset);
             float y = sinf(angle) * radius * (1 + offset);
 
-            // Add fft component
-            x *= 1 + m_fft_result[i-1] * 10e2;
-            y *= 1 + m_fft_result[i-1] * 10e2;
-
             // Add size component
-            constexpr float scalar = 0.2;
+            constexpr float scalar = 0.3;
             x *= 1 + scalar * j;
             y *= 1 + scalar * j;
+
+            // Add fft component
+            float average = 0.0f;
+
+            x *= 1 + m_fft_result[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e2;
+            y *= 1 + m_fft_result[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e2;
 
             // Add to array
             vertices[i] = {

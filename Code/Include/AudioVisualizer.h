@@ -17,7 +17,8 @@ typedef enum {
     DRAW_MAX
 } DRAW_MODE;
 
-#define FFT_SAMPLES_PER_FRAME 1024
+#define FFT_SAMPLES_PER_FRAME 1024  // How many samples should get analyzed
+#define NUM_CIRCLES 4               // How many Faded out circles do you want?
 
 class AudioVisualizer
 {
@@ -43,7 +44,7 @@ class AudioVisualizer
     uint8_t m_renderType;
     void doFourierTransform(float *samples_start, size_t num_samples);
 
-    std::array<float, 5> m_sin_values;
+    std::array<std::array<float, NUM_CIRCLES>, NUM_CIRCLES> m_sin_values;
 
 public:
     AudioVisualizer(std::string name, int width_and_height);
@@ -54,8 +55,12 @@ public:
         std::cout << std::format("\tSamples per frame:\t{}\n", m_fft_result.size());
         std::cout << std::format("\tRender Type:      \t{}\n", m_renderType);
         std::cout << "\tSin Offsets:     \t";
-        for (auto&f : m_sin_values) {
-            std::cout << f << ", ";
+        for (auto& arr : m_sin_values) {
+            std::cout << "(";
+            for (auto& f : arr) {
+                std::cout << f << ", ";
+            }
+            std::cout << "), ";
         }
         std::cout << std::endl;
         SDL_BlendMode mode;
