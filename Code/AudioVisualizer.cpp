@@ -101,49 +101,41 @@ SDL_AppResult AudioVisualizer::update()
 
 void AudioVisualizer::renderCircle()
 {
-    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME + 1> vertices; // + 1 for midpoint
-    std::array<int, FFT_SAMPLES_PER_FRAME * 3> indices;         // * 3 because triangles
+    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 + 1> vertices; // + 1 for midpoint
+    std::array<int, FFT_SAMPLES_PER_FRAME/2 * 3> indices;         // * 3 because triangles
 
     // Fills up the vertex buffer with the vertices of a circle
     vertices[0] = {{0, 0}, {0, 0}, {0, 0}};
     const float angle_step =
         2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
 
-    for (int i = 1; i < vertices.size(); i++)
+    for (int i = 1; i < vertices.size(); i++)   // For each point
     {
-        constexpr float radius = 75.f;
-        float angle = angle_step * i;
-        float time = SDL_GetTicks() / 1000.0f;
+        constexpr float radius = 75.f;          // Radius of the circle
+        float angle = angle_step * i;           // Current angle of the point
+        float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
 
         // Calculate offset for visual flair
         float offset = 0.0f;
         for (int j = 0; j < m_sin_values.size(); ++j) {
-            float freq = j + 1;
-            float phase = m_sin_values[j];
-            offset += sinf(freq * angle + time + phase);
+            float freq = j + 1;                                 // Frequency increases
+            float phase = m_sin_values[j];                      // Phase offset is randomly generated
+            offset += sinf(freq * angle + time * phase);     // Individual waves kind of "race" against each other
         }
-        offset /= 10.0f * m_sin_values.size();
+        offset /= m_sin_values.size() * 5;     // normalize and scale down
 
         // X and Y-Coordinates
         float x = cosf(angle) * radius * (1 + offset);
         float y = sinf(angle) * radius * (1 + offset);
         // Add fft component
-        x *= 1 + m_fft_result[i-1] * 10;
-        y *= 1 + m_fft_result[i-1] * 10;
+        x *= 1 + m_fft_result[i-1] * 10e2;
+        y *= 1 + m_fft_result[i-1] * 10e2;
 
         // Add to array
         vertices[i] = {
             .position = { .x = x, .y = y },
             .color = {0, 0, 0, 255},
             .tex_coord = {0, 0}
-        };
-
-        vertices[i] = {
-            .position = {
-                .x = cosf(angle_step * i) * radius * (1 + offset),
-                .y = sinf(angle_step * i) * radius * (1 + offset),
-            },
-            .color = {0, 0, 0, 0}, .tex_coord = {0, 0}
         };
     }
 
@@ -163,16 +155,6 @@ void AudioVisualizer::renderCircle()
         indices[i * 3 + 2] = i + 2;
     }
     indices[indices.size() - 1] = 1; // To complete the last triangle
-
-    const SDL_FColor colors[] = {
-        {148, 0, 211, 255}, // Violet
-        {0, 0, 255, 255},   // Blue
-        {0, 255, 0, 255},   // Green
-        {255, 255, 0, 255}, // Yellow
-        {255, 127, 0, 255}, // Orange
-        {255, 0, 0, 255},   // Red
-        {0, 0, 0, 255}    // Dark Red
-    };
 
     if (!SDL_RenderGeometry(m_renderer, nullptr, vertices.data(), vertices.size(), indices.data(), indices.size())) {
         std::cerr << SDL_GetError() << std::endl;

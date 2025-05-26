@@ -53,6 +53,11 @@ public:
         std::cout << std::format("\tSize:             \t{}, {}\n", m_window_width, m_window_height);
         std::cout << std::format("\tSamples per frame:\t{}\n", m_fft_result.size());
         std::cout << std::format("\tRender Type:      \t{}\n", m_renderType);
+        std::cout << "\tSin Offsets:     \t";
+        for (auto&f : m_sin_values) {
+            std::cout << f << ", ";
+        }
+        std::cout << std::endl;
         std::cout << std::endl;
     }
 
