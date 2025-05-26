@@ -58,6 +58,9 @@ public:
             std::cout << f << ", ";
         }
         std::cout << std::endl;
+        SDL_BlendMode mode;
+        SDL_GetRenderDrawBlendMode(m_renderer, &mode);
+        std::cout << "\tBlend mode:      \t" << static_cast<int>(mode) << std::endl;
         std::cout << std::endl;
     }
 

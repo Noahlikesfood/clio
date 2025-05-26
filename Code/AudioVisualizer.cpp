@@ -16,6 +16,7 @@ AudioVisualizer::AudioVisualizer(std::string name, int width_and_height)
     // Error handling
     if (!m_window || !m_renderer)
         throw std::runtime_error("Failed to create window and renderer");
+    SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
     // Generate random sin functions for visual flair
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -84,9 +85,13 @@ SDL_AppResult AudioVisualizer::update()
         // Calculate the fft
         doFourierTransform(m_sample_window_start, m_fft_result.size());
     }
+    else {
+        for (auto &a : m_fft_result)
+            a *= .7f;
+    }
 
     // Clear the screen
-    SDL_SetRenderDrawColorFloat(m_renderer, 1.0, 1.0, 1.0, SDL_ALPHA_OPAQUE_FLOAT);
+    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
     SDL_RenderClear(m_renderer);
     // Present the data in the correct way
     switch (m_renderType) {
@@ -101,51 +106,9 @@ SDL_AppResult AudioVisualizer::update()
 
 void AudioVisualizer::renderCircle()
 {
+    constexpr int num_circles = 4;                                // How many Faded out circles do you want?
     std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 + 1> vertices; // + 1 for midpoint
     std::array<int, FFT_SAMPLES_PER_FRAME/2 * 3> indices;         // * 3 because triangles
-
-    // Fills up the vertex buffer with the vertices of a circle
-    vertices[0] = {{0, 0}, {0, 0}, {0, 0}};
-    const float angle_step =
-        2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
-
-    for (int i = 1; i < vertices.size(); i++)   // For each point
-    {
-        constexpr float radius = 75.f;          // Radius of the circle
-        float angle = angle_step * i;           // Current angle of the point
-        float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
-
-        // Calculate offset for visual flair
-        float offset = 0.0f;
-        for (int j = 0; j < m_sin_values.size(); ++j) {
-            float freq = j + 1;                                 // Frequency increases
-            float phase = m_sin_values[j];                      // Phase offset is randomly generated
-            offset += sinf(freq * angle + time * phase);     // Individual waves kind of "race" against each other
-        }
-        offset /= m_sin_values.size() * 5;     // normalize and scale down
-
-        // X and Y-Coordinates
-        float x = cosf(angle) * radius * (1 + offset);
-        float y = sinf(angle) * radius * (1 + offset);
-        // Add fft component
-        x *= 1 + m_fft_result[i-1] * 10e2;
-        y *= 1 + m_fft_result[i-1] * 10e2;
-
-        // Add to array
-        vertices[i] = {
-            .position = { .x = x, .y = y },
-            .color = {0, 0, 0, 255},
-            .tex_coord = {0, 0}
-        };
-    }
-
-    // Transform to screen coordinates
-    for (auto& vertex : vertices) {
-        vertex.position = {
-            .x =  vertex.position.x + static_cast<float>(m_window_width)/2,
-            .y = -vertex.position.y + static_cast<float>(m_window_height)/2,
-        };
-    }
 
     // Fills up the index buffer in a triangle fan configuration (0, 1, 2, 0, 2, 3, 0, 3, 4, ...)
     for (int i = 0; i < indices.size()/3; i++)
@@ -156,8 +119,60 @@ void AudioVisualizer::renderCircle()
     }
     indices[indices.size() - 1] = 1; // To complete the last triangle
 
-    if (!SDL_RenderGeometry(m_renderer, nullptr, vertices.data(), vertices.size(), indices.data(), indices.size())) {
-        std::cerr << SDL_GetError() << std::endl;
+    for (int j = 0; j < num_circles; j++)       // For each circle
+    {
+        // Fills up the vertex buffer with the vertices of a circle
+        vertices[0] = {{0, 0}, {0, 0, 0, .3f}, {0, 0}};
+        const float angle_step =
+        2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
+        for (int i = 1; i < vertices.size(); i++)   // For each point
+        {
+            constexpr float radius = 100.f;          // Radius of the circle
+            float angle = angle_step * i;           // Current angle of the point
+            float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
+
+            // Calculate offset for visual flair
+            float offset = 0.0f;
+            for (int j = 0; j < m_sin_values.size(); ++j) {
+                float freq = j + 1;                                 // Frequency increases
+                float phase = m_sin_values[j];                      // Phase offset is randomly generated
+                offset += sinf(freq * angle + time * phase);     // Individual waves kind of "race" against each other
+            }
+            offset /= m_sin_values.size() * 5;     // normalize and scale down
+
+            // X and Y-Coordinates
+            float x = cosf(angle) * radius * (1 + offset);
+            float y = sinf(angle) * radius * (1 + offset);
+
+            // Add fft component
+            x *= 1 + m_fft_result[i-1] * 10e2;
+            y *= 1 + m_fft_result[i-1] * 10e2;
+
+            // Add size component
+            constexpr float scalar = 0.2;
+            x *= 1 + scalar * j;
+            y *= 1 + scalar * j;
+
+            // Add to array
+            vertices[i] = {
+                .position = { .x = x, .y = y },
+                .color = {0.0f, 0, 0, .3f},
+                .tex_coord = {0, 0}
+            };
+        }
+
+        // Transform to screen coordinates
+        for (auto& vertex : vertices) {
+            vertex.position = {
+                .x =  vertex.position.x + static_cast<float>(m_window_width)/2,
+                .y = -vertex.position.y + static_cast<float>(m_window_height)/2,
+            };
+        }
+
+        // Render current circle
+        if (!SDL_RenderGeometry(m_renderer, nullptr, vertices.data(), vertices.size(), indices.data(), indices.size())) {
+            std::cerr << SDL_GetError() << std::endl;
+        }
     }
 }
 
