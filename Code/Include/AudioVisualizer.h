@@ -17,6 +17,8 @@ typedef enum {
     DRAW_MAX
 } DRAW_MODE;
 
+#define FFT_SAMPLES_PER_FRAME 1024
+
 class AudioVisualizer
 {
     SDL_Window* m_window;
@@ -24,8 +26,6 @@ class AudioVisualizer
     const int m_window_height;
 
     SDL_Renderer* m_renderer;
-
-    size_t fft_samples_per_frame = 1024;
 
     std::shared_ptr<AudioData> m_audio_data;
     float *m_samples_cursor = nullptr;
@@ -35,7 +35,7 @@ class AudioVisualizer
     float *m_sample_window_start = nullptr;
     float *m_sample_window_end = nullptr;
 
-    std::array<float, 1024> m_fft_result;
+    std::array<float, FFT_SAMPLES_PER_FRAME> m_fft_result;
 
     void renderCircle();
     void renderGraph();
@@ -57,7 +57,7 @@ public:
     }
 
     void setAudioData(const std::shared_ptr<AudioData> &audioData) {
-        if (audioData->getSampleCount() < fft_samples_per_frame)
+        if (audioData->getSampleCount() < m_fft_result.size())
             throw std::runtime_error("AudioData is too small to analize");
         m_audio_data = audioData;
         m_samples_start = audioData->getStart();

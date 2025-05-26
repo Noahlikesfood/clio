@@ -67,22 +67,22 @@ SDL_AppResult AudioVisualizer::update()
         m_samples_cursor = m_audio_data->getCurrent();
 
         // If inside first fft_samples_per_frame samples, use those
-        if (m_samples_cursor - m_samples_start < fft_samples_per_frame) {
+        if (m_samples_cursor - m_samples_start < m_fft_result.size()) {
             m_sample_window_start = m_samples_start;
-            m_sample_window_end = m_samples_start + fft_samples_per_frame;
+            m_sample_window_end = m_samples_start + FFT_SAMPLES_PER_FRAME;
         }
         // If inside last fft_samples_per_frame samples, use those
-        else if (m_samples_end - m_samples_cursor < fft_samples_per_frame) {
-            m_sample_window_start = m_samples_end - fft_samples_per_frame;
+        else if (m_samples_end - m_samples_cursor < m_fft_result.size()) {
+            m_sample_window_start = m_samples_end - m_fft_result.size();
             m_sample_window_end = m_samples_end;
         }
         // Otherwise use the fft_samples_per_frame frames around it
         else {
-            m_sample_window_start = m_samples_cursor - (fft_samples_per_frame / 2);
-            m_sample_window_end = m_samples_cursor + (fft_samples_per_frame / 2);
+            m_sample_window_start = m_samples_cursor - (m_fft_result.size() / 2);
+            m_sample_window_end = m_samples_cursor + (m_fft_result.size() / 2);
         }
         // Calculate the fft
-        doFourierTransform(m_sample_window_start, fft_samples_per_frame);
+        doFourierTransform(m_sample_window_start, m_fft_result.size());
     }
 
     // Clear the screen
@@ -101,11 +101,8 @@ SDL_AppResult AudioVisualizer::update()
 
 void AudioVisualizer::renderCircle()
 {
-    std::vector<SDL_Vertex> vertices;
-    std::vector<int> indices;
-
-    vertices.resize(m_fft_result.size() + 1);
-    indices.resize(m_fft_result.size() * 3);
+    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME + 1> vertices; // + 1 for midpoint
+    std::array<int, FFT_SAMPLES_PER_FRAME * 3> indices;         // * 3 because triangles
 
     // Fills up the vertex buffer with the vertices of a circle
     vertices[0] = {{0, 0}, {0, 0}, {0, 0}};
@@ -184,9 +181,8 @@ void AudioVisualizer::renderCircle()
 
 void AudioVisualizer::renderGraph()
 {
-    std::vector<SDL_Vertex> vertices;
-    // Get rid of mirror frequencies
-    vertices.resize(m_fft_result.size() / 2);
+    // / 2 get rid of mirror frequencies
+    std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME / 2> vertices;
     // Convert to Screen coordinates
     for (int i = 0; i < vertices.size(); i++) {
         vertices[i] = {
