@@ -151,10 +151,10 @@ void AudioVisualizer::renderCircle()
             y *= 1 + scalar * j;
 
             // Add fft component
-            float average = 0.0f;
-
-            x *= 1 + m_fft_result[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e2;
-            y *= 1 + m_fft_result[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e2;
+            smooth_fft_result(8);
+            float fft_component = smoothed_samples[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e4;
+            x *= 1 + fft_component / powf(j+1, -1);
+            y *= 1 + fft_component / powf(j+1, -1);
 
             // Add to array
             vertices[i] = {
@@ -198,4 +198,18 @@ void AudioVisualizer::renderGraph()
     for (int i=0; i<vertices.size()-1; i++) {
         SDL_RenderLine(m_renderer, vertices[i].position.x, vertices[i].position.y, vertices[i+1].position.x, vertices[i+1].position.y);
     }
+}
+
+void AudioVisualizer::smooth_fft_result(uint8_t radius)
+{
+    for (int i=1; i<m_fft_result.size(); i++) {
+        float average = 0.0f;
+        for (int current = -radius; current<radius; current++) {
+            int in_bounds = (current + i + m_fft_result.size()) % m_fft_result.size(); // Modulo for negative is just wrong
+            average += m_fft_result[in_bounds];
+        }
+        smoothed_samples[i] = average / static_cast<float>(m_fft_result.size());
+        // std::cout << smoothed_samples[i] << ", ";
+    }
+    // std::cout << std::endl;
 }
