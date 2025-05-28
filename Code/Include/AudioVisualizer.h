@@ -39,10 +39,10 @@ class AudioVisualizer
     std::array<float, FFT_SAMPLES_PER_FRAME> m_fft_result;
     std::array<float, FFT_SAMPLES_PER_FRAME> smoothed_samples;
 
-    void renderCircle();
+    void renderCircles();
     void renderGraph();
-    void renderBackground();
     uint8_t m_renderType;
+    SDL_FColor m_color;
     void doFourierTransform(float *samples_start, size_t num_samples);
 
     std::array<std::array<float, NUM_CIRCLES>, NUM_CIRCLES> m_sin_values;

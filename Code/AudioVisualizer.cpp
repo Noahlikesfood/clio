@@ -95,11 +95,11 @@ SDL_AppResult AudioVisualizer::update()
     }
 
     // Clear the screen
-    SDL_SetRenderDrawColor(m_renderer, 255, 255, 255, 255);
+    SDL_SetRenderDrawColor(m_renderer, 28, 28, 28, 255);
     SDL_RenderClear(m_renderer);
     // Present the data in the correct way
     switch (m_renderType) {
-        case DRAW_CIRCLE: renderCircle(); break;
+        case DRAW_CIRCLE: renderCircles(); break;
         case DRAW_GRAPH: renderGraph(); break;
         default: throw std::runtime_error("Invalid render type");
     }
@@ -108,7 +108,7 @@ SDL_AppResult AudioVisualizer::update()
     return SDL_APP_CONTINUE;
 }
 
-void AudioVisualizer::renderCircle()
+void AudioVisualizer::renderCircles()
 {
     std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES + 1> vertices;     // + 1 for midpoint
     std::array<int, (FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES) * 3> indices;           // * 3 because triangles
@@ -128,12 +128,20 @@ void AudioVisualizer::renderCircle()
         // Fills up the vertex buffer with the vertices of a circle
         vertices[0] = {{0, 0}, {0, 0, 0, .3f}, {0, 0}};
         const float angle_step = 2.0f * dj::Pi / static_cast<float>(vertices.size() - 1);
+        float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
+
+        // Calculate color for the circles
+        m_color = {
+            .r =  sinf(j * time * .1f) / 2.f + .5f,
+            .g =  cosf(j * time * .1f) / 2.f + .5f,
+            .b = -sinf(j * time * .1f) / 2.f + .5f,
+            .a = .3f
+        };
 
         for (int i = 1; i < vertices.size(); i++)   // For each point
         {
             constexpr float radius = 80.f;          // Radius of the circle
             float angle = angle_step * i;           // Current angle of the point
-            float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
 
             // Calculate offset for visual flair
             float offset = 0.0f;
@@ -165,10 +173,11 @@ void AudioVisualizer::renderCircle()
             // Add to array
             vertices[i] = {
                 .position = { .x = x, .y = y },
-                .color = {0.0f, 0, 0, .3f},
+                .color = m_color,
                 .tex_coord = {0, 0}
             };
         }
+        vertices[0].color = m_color;
 
         // Transform to screen coordinates
         for (auto& vertex : vertices) {
