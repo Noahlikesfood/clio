@@ -28,7 +28,7 @@ AudioVisualizer::AudioVisualizer(std::string name, int width_and_height)
     }
     // Zero Initialize
     m_fft_result.fill(0.0f);
-
+    smoothed_samples.fill(0.0f);
     print();
 }
 
@@ -60,6 +60,8 @@ void AudioVisualizer::doFourierTransform(float *samples_start, size_t num_sample
     //     std::cout << r << ", ";
     // }
     // std::cout << std::endl;
+
+    smooth_fft_result(10);
 }
 
 SDL_AppResult AudioVisualizer::update()
@@ -88,7 +90,7 @@ SDL_AppResult AudioVisualizer::update()
         doFourierTransform(m_sample_window_start, m_fft_result.size());
     }
     else {
-        for (auto &a : m_fft_result)
+        for (auto &a : smoothed_samples)
             a *= .7f;
     }
 
@@ -110,6 +112,7 @@ void AudioVisualizer::renderCircle()
 {
     std::array<SDL_Vertex, FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES + 1> vertices;     // + 1 for midpoint
     std::array<int, (FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES) * 3> indices;           // * 3 because triangles
+    constexpr int samples_per_circle = FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES;
 
     // Fills up the index buffer in a triangle fan configuration (0, 1, 2, 0, 2, 3, 0, 3, 4, ...)
     for (int i = 0; i < indices.size()/3; i++)
@@ -128,7 +131,7 @@ void AudioVisualizer::renderCircle()
 
         for (int i = 1; i < vertices.size(); i++)   // For each point
         {
-            constexpr float radius = 100.f;          // Radius of the circle
+            constexpr float radius = 80.f;          // Radius of the circle
             float angle = angle_step * i;           // Current angle of the point
             float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
 
@@ -145,16 +148,19 @@ void AudioVisualizer::renderCircle()
             float x = cosf(angle) * radius * (1 + offset);
             float y = sinf(angle) * radius * (1 + offset);
 
-            // Add size component
+            // Add circle size component
             constexpr float scalar = 0.3;
             x *= 1 + scalar * j;
             y *= 1 + scalar * j;
 
             // Add fft component
-            smooth_fft_result(8);
-            float fft_component = smoothed_samples[i-1 + FFT_SAMPLES_PER_FRAME/2 / NUM_CIRCLES * j] * 10e4;
-            x *= 1 + fft_component / powf(j+1, -1);
-            y *= 1 + fft_component / powf(j+1, -1);
+            float circle_average = 0.0f;
+            for (int q = 0; q < samples_per_circle/4; q++) {
+                circle_average = smoothed_samples[q + samples_per_circle * j] * 10e5;
+            }
+            float fft_component = circle_average / samples_per_circle;
+            x *= 1 + fft_component;
+            y *= 1 + fft_component;
 
             // Add to array
             vertices[i] = {

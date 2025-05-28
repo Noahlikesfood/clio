@@ -18,7 +18,7 @@ typedef enum {
 } DRAW_MODE;
 
 #define FFT_SAMPLES_PER_FRAME 1024  // How many samples should get analyzed
-#define NUM_CIRCLES 4               // How many Faded out circles do you want?
+#define NUM_CIRCLES 8               // How many Faded out circles do you want?
 
 class AudioVisualizer
 {
@@ -45,9 +45,9 @@ class AudioVisualizer
     uint8_t m_renderType;
     void doFourierTransform(float *samples_start, size_t num_samples);
 
-    void smooth_fft_result(uint8_t window_size);
-
     std::array<std::array<float, NUM_CIRCLES>, NUM_CIRCLES> m_sin_values;
+
+    void smooth_fft_result(uint8_t radius);
 
 public:
     AudioVisualizer(std::string name, int width_and_height);
@@ -84,6 +84,7 @@ public:
         m_samples_start = nullptr;
         m_samples_end = nullptr;
         m_fft_result.fill(0.0f);
+        smoothed_samples.fill(0.0f);
     }
     void cycleRenderStyle() {
         m_renderType++;
