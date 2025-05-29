@@ -132,9 +132,9 @@ void AudioVisualizer::renderCircles()
 
         // Calculate color for the circles
         SDL_FColor color = {
-            .r = 1 -  sinf(j * time * .1f) / 2.f + .5f,
-            .g = 1 -  cosf(j * time * .1f) / 2.f + .5f,
-            .b = 1 - -sinf(j * time * .1f) / 2.f + .5f,
+            .r =  sinf(j * time * .1f) / 2.f + .5f,
+            .g =  cosf(j * time * .1f) / 2.f + .5f,
+            .b = -sinf(j * time * .1f) / 2.f + .5f,
             .a = .1f,
         };
 
