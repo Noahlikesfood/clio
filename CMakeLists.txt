@@ -17,13 +17,13 @@ link_directories(${CMAKE_SOURCE_DIR}/SDL/cmake-build-debug/Debug)
 set(LIBS SDL3.lib)
 
 # Main executable
-add_executable(main
+add_executable(clio WIN32
         Code/main.cpp
         Code/AudioData.cpp
         Code/AudioPlayer.cpp
         Code/AudioVisualizer.cpp
 )
-target_link_libraries(main PRIVATE ${LIBS})
+target_link_libraries(clio PRIVATE ${LIBS})
 
 # Automatically add all test files from Tests/
 # file(GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/Tests/*.cpp")

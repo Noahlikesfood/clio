@@ -95,7 +95,7 @@ SDL_AppResult AudioVisualizer::update()
     }
 
     // Clear the screen
-    SDL_SetRenderDrawColor(m_renderer, 28, 28, 28, 255);
+    SDL_SetRenderDrawColor(m_renderer, 30, 30, 30, 255);
     SDL_RenderClear(m_renderer);
     // Present the data in the correct way
     switch (m_renderType) {
@@ -135,7 +135,7 @@ void AudioVisualizer::renderCircles()
             .r =  sinf(j * time * .1f) / 2.f + .5f,
             .g =  cosf(j * time * .1f) / 2.f + .5f,
             .b = -sinf(j * time * .1f) / 2.f + .5f,
-            .a = .1f,
+            .a = .3f,
         };
 
         for (int i = 1; i < vertices.size(); i++)   // For each point
