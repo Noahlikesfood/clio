@@ -123,7 +123,7 @@ void AudioVisualizer::renderCircles()
     }
     indices[indices.size() - 1] = 1; // To complete the last triangle
 
-    for (int j = 0; j < NUM_CIRCLES; j++)   // For each circle
+    for (int j = NUM_CIRCLES-1; j >= 0; j--)   // For each circle
     {
         // Fills up the vertex buffer with the vertices of a circle
         vertices[0] = {{0, 0}, {0, 0, 0, .3f}, {0, 0}};
@@ -135,7 +135,7 @@ void AudioVisualizer::renderCircles()
             .r =  sinf(j * time * .1f) / 2.f + .5f,
             .g =  cosf(j * time * .1f) / 2.f + .5f,
             .b = -sinf(j * time * .1f) / 2.f + .5f,
-            .a = .3f
+            .a = .1f,
         };
 
         for (int i = 1; i < vertices.size(); i++)   // For each point
@@ -166,7 +166,7 @@ void AudioVisualizer::renderCircles()
             for (int q = 0; q < samples_per_circle/4; q++) {
                 circle_average = smoothed_samples[q + samples_per_circle * j] * 10e5;
             }
-            float fft_component = circle_average / samples_per_circle;
+            float fft_component = circle_average * sqrtf(j+1) / samples_per_circle;
             x *= 1 + fft_component;
             y *= 1 + fft_component;
 
@@ -191,6 +191,13 @@ void AudioVisualizer::renderCircles()
         if (!SDL_RenderGeometry(m_renderer, nullptr, vertices.data(), vertices.size(), indices.data(), indices.size())) {
             std::cerr << SDL_GetError() << std::endl;
         }
+
+        // Render outline
+        // SDL_SetRenderDrawColorFloat(m_renderer, 1.f, 1.f, 1.f, 1.f - (1.f+j)/(NUM_CIRCLES+1));
+        // for (int q=2; q<vertices.size(); q++) {
+        //     SDL_RenderLine(m_renderer, vertices[q-1].position.x, vertices[q-1].position.y, vertices[q].position.x, vertices[q].position.y);
+        // }
+        // SDL_RenderLine(m_renderer, vertices[1].position.x, vertices[1].position.y, vertices[vertices.size()-1].position.x, vertices[vertices.size()-1].position.y);
     }
 }
 
