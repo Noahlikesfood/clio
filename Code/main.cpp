@@ -15,14 +15,14 @@ std::unique_ptr<AudioVisualizer> g_audioVisualizer;
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
-    SDL_SetAppMetadata("Musik Visualizer", "1.0", "com.noah.engled");
+    SDL_SetAppMetadata("clio", "1.0", "com.noah.engled");
 
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
         SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
     }
 	// VISUALIZER SHOULD GET FED:: I THINK
-	g_audioVisualizer = std::make_unique<AudioVisualizer>("Musik Visualizer", 600);
+	g_audioVisualizer = std::make_unique<AudioVisualizer>("clio", 600);
 
     return SDL_APP_CONTINUE;
 }

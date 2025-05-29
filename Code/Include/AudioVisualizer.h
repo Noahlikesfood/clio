@@ -40,7 +40,6 @@ class AudioVisualizer
     std::array<float, FFT_SAMPLES_PER_FRAME> smoothed_samples;
 
     uint8_t m_renderType;
-    SDL_FColor m_color;
     void renderCircles();
     void renderGraph();
 

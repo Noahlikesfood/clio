@@ -131,10 +131,10 @@ void AudioVisualizer::renderCircles()
         float time = SDL_GetTicks() / 1000.0f;  // Current time in seconds (slower looks better)
 
         // Calculate color for the circles
-        m_color = {
-            .r =  sinf(j * time * .1f) / 2.f + .5f,
-            .g =  cosf(j * time * .1f) / 2.f + .5f,
-            .b = -sinf(j * time * .1f) / 2.f + .5f,
+        SDL_FColor color = {
+            .r = 1 -  sinf(j * time * .1f) / 2.f + .5f,
+            .g = 1 -  cosf(j * time * .1f) / 2.f + .5f,
+            .b = 1 - -sinf(j * time * .1f) / 2.f + .5f,
             .a = .1f,
         };
 
@@ -173,11 +173,11 @@ void AudioVisualizer::renderCircles()
             // Add to array
             vertices[i] = {
                 .position = { .x = x, .y = y },
-                .color = m_color,
+                .color = color,
                 .tex_coord = {0, 0}
             };
         }
-        vertices[0].color = m_color;
+        vertices[0].color = color;
 
         // Transform to screen coordinates
         for (auto& vertex : vertices) {

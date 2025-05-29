@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(MusikVisualizer LANGUAGES CXX)
+project(clio LANGUAGES CXX)
 
 # Set C++ standard and compile options
 set(CMAKE_CXX_STANDARD 20)
